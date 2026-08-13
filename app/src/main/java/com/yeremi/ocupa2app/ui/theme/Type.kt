@@ -30,6 +30,11 @@ val WorkSansFamily = FontFamily(
     Font(googleFont = WorkSansFont, fontProvider = provider, weight = FontWeight.SemiBold)
 )
 
+val WorkSansFamily_SemiBold = TextStyle(
+    fontFamily = WorkSansFamily,
+    fontWeight = FontWeight.SemiBold
+)
+
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = RajdhaniFamily,

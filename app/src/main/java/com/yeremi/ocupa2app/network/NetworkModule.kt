@@ -14,6 +14,16 @@ object NetworkModule {
     private const val BASE_URL = "https://ocupa2.ia3x.com/apix/"
 
     fun provideAuthApiService(sessionManager: SessionManager): AuthApiService {
+        val client = createOkHttpClient(sessionManager)
+        return createRetrofit(client).create(AuthApiService::class.java)
+    }
+
+    fun provideProfileApiService(sessionManager: SessionManager): ProfileApiService {
+        val client = createOkHttpClient(sessionManager)
+        return createRetrofit(client).create(ProfileApiService::class.java)
+    }
+
+    private fun createOkHttpClient(sessionManager: SessionManager): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
@@ -22,7 +32,7 @@ object NetworkModule {
             val token = runBlocking { sessionManager.tokenFlow.firstOrNull() }
             val request = chain.request().newBuilder().apply {
                 if (!token.isNullOrEmpty()) {
-                    addHeader("Authorization", "Bearer $token")
+                    addHeader("Authorization", token)
                 }
             }.build()
             chain.proceed(request)
@@ -32,22 +42,22 @@ object NetworkModule {
             val response = chain.proceed(chain.request())
             if (response.code == 401) {
                 runBlocking { sessionManager.clearSession() }
-                // Aquí se podría disparar un evento global o usar un Flow para navegar al Login
             }
             response
         }
 
-        val client = OkHttpClient.Builder()
+        return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .addInterceptor(errorInterceptor)
             .build()
+    }
 
+    private fun createRetrofit(client: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(AuthApiService::class.java)
     }
 }

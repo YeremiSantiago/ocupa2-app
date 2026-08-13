@@ -20,9 +20,10 @@ data class ForgotPasswordRequest(
     val referralMatricula: String
 )
 
-data class AuthResponse(
+data class AuthResponse<T>(
     val ok: Boolean,
-    val data: AuthData?
+    val data: T?,
+    val message: String?
 )
 
 data class AuthData(
@@ -35,5 +36,13 @@ data class UserData(
     val id: String?,
     val email: String?,
     val firstName: String?,
-    val lastName: String?
+    val lastName: String?,
+    val cedula: String? = null,
+    val gender: String? = null,
+    val birthDate: String? = null,
+    val profileCompleted: Boolean = false
+)
+
+data class ForgotPasswordResponse(
+    val message: String?
 )
