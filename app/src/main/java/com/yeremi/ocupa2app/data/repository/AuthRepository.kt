@@ -3,6 +3,7 @@ package com.yeremi.ocupa2app.data.repository
 import com.yeremi.ocupa2app.data.local.SessionManager
 import com.yeremi.ocupa2app.network.AuthApiService
 import com.yeremi.ocupa2app.network.models.*
+import com.yeremi.ocupa2app.network.parseError
 import kotlinx.coroutines.flow.Flow
 
 class AuthRepository(
@@ -25,10 +26,10 @@ class AuthRepository(
                     Result.failure(Exception(body.message ?: "Error en la respuesta del servidor"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 
@@ -53,10 +54,10 @@ class AuthRepository(
                     Result.failure(Exception(body.message ?: "Error en el registro"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 
@@ -71,10 +72,10 @@ class AuthRepository(
                     Result.failure(Exception(body.message ?: "Error al procesar solicitud"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 

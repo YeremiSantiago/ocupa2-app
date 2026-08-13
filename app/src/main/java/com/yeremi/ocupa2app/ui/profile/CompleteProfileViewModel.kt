@@ -35,9 +35,37 @@ class CompleteProfileViewModel(private val repository: ProfileRepository) : View
     }
 
     fun updateProfile(cedula: String, firstName: String, lastName: String, gender: String, birthDate: String) {
+        // --- Validaciones locales antes de llamar al API ---
+        val cedulaLimpia = cedula.replace("-", "").replace(" ", "")
+        val errorLocal = when {
+            firstName.isBlank() ->
+                "El nombre es obligatorio."
+            firstName.trim().length < 2 ->
+                "El nombre debe tener al menos 2 caracteres."
+            lastName.isBlank() ->
+                "El apellido es obligatorio."
+            lastName.trim().length < 2 ->
+                "El apellido debe tener al menos 2 caracteres."
+            cedulaLimpia.isBlank() ->
+                "La cédula es obligatoria."
+            cedulaLimpia.length != 11 || !cedulaLimpia.all { it.isDigit() } ->
+                "La cédula debe tener exactamente 11 dígitos."
+            gender.isBlank() ->
+                "Debes seleccionar un género."
+            birthDate.isBlank() ->
+                "La fecha de nacimiento es obligatoria."
+            else -> null
+        }
+
+        if (errorLocal != null) {
+            _uiState.value = ProfileState.Error(errorLocal)
+            return
+        }
+
+        // --- Si pasa todas las validaciones, llama al API ---
         viewModelScope.launch {
             _uiState.value = ProfileState.Loading
-            val request = ProfileUpdateRequest(cedula, firstName, lastName, gender, birthDate)
+            val request = ProfileUpdateRequest(cedulaLimpia, firstName.trim(), lastName.trim(), gender, birthDate)
             repository.updateProfile(request).onSuccess {
                 _events.emit(ProfileEvent.NavigateToHome)
             }.onFailure {

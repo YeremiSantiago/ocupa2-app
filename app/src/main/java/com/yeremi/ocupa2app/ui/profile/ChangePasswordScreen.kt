@@ -27,7 +27,6 @@ fun ChangePasswordScreen(
     viewModel: ChangePasswordViewModel,
     onNavigateBack: () -> Unit
 ) {
-    val currentPassword by viewModel.currentPassword.collectAsState()
     val newPassword by viewModel.newPassword.collectAsState()
     val confirmPassword by viewModel.confirmPassword.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -64,7 +63,6 @@ fun ChangePasswordScreen(
             } else {
                 FormContent(
                     viewModel = viewModel,
-                    currentPassword = currentPassword,
                     newPassword = newPassword,
                     confirmPassword = confirmPassword,
                     isLoading = isLoading,
@@ -78,7 +76,6 @@ fun ChangePasswordScreen(
 @Composable
 fun FormContent(
     viewModel: ChangePasswordViewModel,
-    currentPassword: String,
     newPassword: String,
     confirmPassword: String,
     isLoading: Boolean,
@@ -86,11 +83,8 @@ fun FormContent(
 ) {
     val scrollState = rememberScrollState()
     
-    var currentVisible by remember { mutableStateOf(false) }
     var newVisible by remember { mutableStateOf(false) }
     var confirmVisible by remember { mutableStateOf(false) }
-    
-    val isCurrentPasswordError = errorMessage != null && (errorMessage.contains("actual", ignoreCase = true) || errorMessage.contains("incorrecta", ignoreCase = true))
 
     Column(
         modifier = Modifier
@@ -128,25 +122,13 @@ fun FormContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Ingresa tu contraseña actual y luego la nueva",
+            text = "Ingresa una nueva contraseña segura para tu cuenta",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(32.dp))
-
-        PasswordInputField(
-            label = "CONTRASEÑA ACTUAL",
-            value = currentPassword,
-            onValueChange = { viewModel.onCurrentPasswordChanged(it) },
-            isVisible = currentVisible,
-            onToggleVisibility = { currentVisible = !currentVisible },
-            isError = isCurrentPasswordError,
-            errorText = if (isCurrentPasswordError) errorMessage else null
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         Column {
             PasswordInputField(
@@ -159,7 +141,10 @@ fun FormContent(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            StrengthIndicator(strength = viewModel.passwordStrength)
+            StrengthIndicator(
+                strength = viewModel.passwordStrength,
+                password = newPassword
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -193,7 +178,7 @@ fun FormContent(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        if (errorMessage != null && !isCurrentPasswordError) {
+        if (errorMessage != null) {
             Text(
                 text = errorMessage,
                 color = SolarOrange,
@@ -284,51 +269,59 @@ fun PasswordInputField(
 }
 
 @Composable
-fun StrengthIndicator(strength: ChangePasswordViewModel.PasswordStrength) {
-    val segments = 3
-    val activeSegments = when(strength) {
-        ChangePasswordViewModel.PasswordStrength.WEAK -> 1
-        ChangePasswordViewModel.PasswordStrength.MEDIUM -> 2
-        ChangePasswordViewModel.PasswordStrength.STRONG -> 3
-    }
-    
-    val color = when(strength) {
-        ChangePasswordViewModel.PasswordStrength.WEAK -> SolarOrange
-        ChangePasswordViewModel.PasswordStrength.MEDIUM -> AcidLime
-        ChangePasswordViewModel.PasswordStrength.STRONG -> ElectricTeal
-    }
-    
-    val label = when(strength) {
-        ChangePasswordViewModel.PasswordStrength.WEAK -> "Débil"
-        ChangePasswordViewModel.PasswordStrength.MEDIUM -> "Media"
-        ChangePasswordViewModel.PasswordStrength.STRONG -> "Fuerte"
-    }
+fun StrengthIndicator(strength: ChangePasswordViewModel.PasswordStrength, password: String) {
+    androidx.compose.animation.AnimatedVisibility(visible = password.isNotEmpty()) {
+        val segments = 3
+        val activeSegments = when(strength) {
+            ChangePasswordViewModel.PasswordStrength.WEAK -> 1
+            ChangePasswordViewModel.PasswordStrength.MEDIUM -> 2
+            ChangePasswordViewModel.PasswordStrength.STRONG -> 3
+        }
+        
+        val color = when(strength) {
+            ChangePasswordViewModel.PasswordStrength.WEAK -> SolarOrange
+            ChangePasswordViewModel.PasswordStrength.MEDIUM -> AcidLime
+            ChangePasswordViewModel.PasswordStrength.STRONG -> ElectricTeal
+        }
+        
+        val label = when(strength) {
+            ChangePasswordViewModel.PasswordStrength.WEAK -> "Seguridad: Débil"
+            ChangePasswordViewModel.PasswordStrength.MEDIUM -> "Seguridad: Media"
+            ChangePasswordViewModel.PasswordStrength.STRONG -> "Seguridad: Fuerte"
+        }
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            for (i in 1..segments) {
-                val segmentColor by animateColorAsState(
-                    targetValue = if (i <= activeSegments) color else MaterialTheme.colorScheme.surfaceVariant,
-                    label = "segment_color"
-                )
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(segmentColor)
+        Column(modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                for (i in 1..segments) {
+                    val segmentColor by animateColorAsState(
+                        targetValue = if (i <= activeSegments) color else MaterialTheme.colorScheme.surfaceVariant,
+                        label = "segment_color"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(1.5.dp))
+                            .background(segmentColor)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = label,
+                    color = color,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = label,
-            color = color,
-            style = MaterialTheme.typography.bodySmall
-        )
     }
 }
 
@@ -348,7 +341,7 @@ fun RequirementsCard(minLength: Boolean, hasUpper: Boolean, hasNumber: Boolean) 
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(12.dp))
-            RequirementItem(text = "Mínimo 8 caracteres", isMet = minLength)
+            RequirementItem(text = "Mínimo 6 caracteres", isMet = minLength)
             RequirementItem(text = "Al menos una mayúscula", isMet = hasUpper)
             RequirementItem(text = "Al menos un número", isMet = hasNumber)
         }

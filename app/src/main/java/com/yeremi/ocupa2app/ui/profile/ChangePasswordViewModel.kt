@@ -9,9 +9,6 @@ import kotlinx.coroutines.launch
 
 class ChangePasswordViewModel(private val repository: ProfileRepository) : ViewModel() {
 
-    private val _currentPassword = MutableStateFlow("")
-    val currentPassword: StateFlow<String> = _currentPassword
-
     private val _newPassword = MutableStateFlow("")
     val newPassword: StateFlow<String> = _newPassword
 
@@ -28,11 +25,11 @@ class ChangePasswordViewModel(private val repository: ProfileRepository) : ViewM
     val isSuccess: StateFlow<Boolean> = _isSuccess
 
     // Computed properties
-    val requirementMinLength: Boolean get() = _newPassword.value.length >= 8
+    val requirementMinLength: Boolean get() = _newPassword.value.length >= 6
     val requirementUppercase: Boolean get() = _newPassword.value.any { it.isUpperCase() }
     val requirementNumber: Boolean get() = _newPassword.value.any { it.isDigit() }
     
-    val isFormValid: Boolean get() = _currentPassword.value.isNotBlank() &&
+    val isFormValid: Boolean get() =
             requirementMinLength && requirementUppercase && requirementNumber &&
             _newPassword.value == _confirmPassword.value
 
@@ -48,11 +45,6 @@ class ChangePasswordViewModel(private val repository: ProfileRepository) : ViewM
             }
         }
 
-    fun onCurrentPasswordChanged(value: String) { 
-        _currentPassword.value = value 
-        _errorMessage.value = null
-    }
-    
     fun onNewPasswordChanged(value: String) { 
         _newPassword.value = value 
         _errorMessage.value = null
@@ -70,7 +62,7 @@ class ChangePasswordViewModel(private val repository: ProfileRepository) : ViewM
             _isLoading.value = true
             _errorMessage.value = null
             
-            repository.changePassword(_currentPassword.value, _newPassword.value)
+            repository.changePassword(_newPassword.value)
                 .onSuccess {
                     _isSuccess.value = true
                 }
