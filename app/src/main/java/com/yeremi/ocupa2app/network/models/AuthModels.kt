@@ -37,10 +37,12 @@ data class UserData(
     val email: String?,
     val firstName: String?,
     val lastName: String?,
+    val nombre: String? = null,
     val cedula: String? = null,
     val gender: String? = null,
     val birthDate: String? = null,
-    val profileCompleted: Boolean = false
+    val profileCompleted: Boolean = false,
+    val referralMatricula: String? = null
 )
 
 data class ForgotPasswordResponse(

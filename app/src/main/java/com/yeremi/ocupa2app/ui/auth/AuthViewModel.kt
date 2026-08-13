@@ -19,9 +19,24 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     val events = _events.asSharedFlow()
 
     fun login(email: String, password: String) {
+        // --- Validaciones locales ---
+        val errorLocal = when {
+            email.isBlank() ->
+                "El correo electrónico es obligatorio."
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() ->
+                "Ingresa un correo electrónico válido."
+            password.isBlank() ->
+                "La contraseña es obligatoria."
+            else -> null
+        }
+        if (errorLocal != null) {
+            _uiState.value = AuthState.Error(errorLocal)
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = AuthState.Loading
-            val result = repository.login(email, password)
+            val result = repository.login(email.trim(), password)
             result.onSuccess { data ->
                 _uiState.value = AuthState.Success(data)
                 if (data.user?.profileCompleted == true) {
@@ -53,9 +68,26 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     }
 
     fun forgotPassword(email: String, referralMatricula: String) {
+        // --- Validaciones locales ---
+        val errorLocal = when {
+            email.isBlank() ->
+                "El correo electrónico es obligatorio."
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() ->
+                "Ingresa un correo electrónico válido."
+            referralMatricula.isBlank() ->
+                "La matrícula es obligatoria."
+            referralMatricula.trim().length < 5 ->
+                "Ingresa una matrícula válida."
+            else -> null
+        }
+        if (errorLocal != null) {
+            _uiState.value = AuthState.Error(errorLocal)
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = AuthState.Loading
-            val result = repository.forgotPassword(email, referralMatricula)
+            val result = repository.forgotPassword(email.trim(), referralMatricula.trim())
             result.onSuccess { message ->
                 _uiState.value = AuthState.ForgotPasswordSuccess(message)
             }.onFailure {

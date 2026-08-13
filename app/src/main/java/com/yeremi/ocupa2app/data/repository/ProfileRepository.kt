@@ -2,6 +2,7 @@ package com.yeremi.ocupa2app.data.repository
 
 import com.yeremi.ocupa2app.network.ProfileApiService
 import com.yeremi.ocupa2app.network.models.*
+import com.yeremi.ocupa2app.network.parseError
 
 class ProfileRepository(private val apiService: ProfileApiService) {
 
@@ -16,10 +17,10 @@ class ProfileRepository(private val apiService: ProfileApiService) {
                     Result.failure(Exception(body.message ?: "Error al obtener perfil"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 
@@ -34,10 +35,10 @@ class ProfileRepository(private val apiService: ProfileApiService) {
                     Result.failure(Exception(body.message ?: "Error al actualizar perfil"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 
@@ -52,10 +53,10 @@ class ProfileRepository(private val apiService: ProfileApiService) {
                     Result.failure(Exception(body.message ?: "Error al obtener tipos de empleo"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 
@@ -70,10 +71,10 @@ class ProfileRepository(private val apiService: ProfileApiService) {
                     Result.failure(Exception(body.message ?: "Error al obtener ofertas"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 
@@ -85,19 +86,19 @@ class ProfileRepository(private val apiService: ProfileApiService) {
                 if (body.ok) {
                     Result.success(Unit)
                 } else {
-                    Result.failure(Exception(body.message ?: "Error al procesar like"))
+                    Result.failure(Exception(body.message ?: "Error al procesar me gusta"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 
-    suspend fun changePassword(currentPassword: String, newPassword: String): Result<String> {
+    suspend fun changePassword(newPassword: String): Result<String> {
         return try {
-            val response = apiService.changePassword(ChangePasswordRequest(currentPassword, newPassword))
+            val response = apiService.changePassword(ChangePasswordRequest(newPassword))
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
                 if (body.ok) {
@@ -106,10 +107,10 @@ class ProfileRepository(private val apiService: ProfileApiService) {
                     Result.failure(Exception(body.message ?: "Error al cambiar contraseña"))
                 }
             } else {
-                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+                Result.failure(Exception(response.parseError()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
+            Result.failure(Exception("Fallo en la red. Verifica tu conexión a internet."))
         }
     }
 }

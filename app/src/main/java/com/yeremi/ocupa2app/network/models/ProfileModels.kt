@@ -46,6 +46,5 @@ data class JobTypeShort(
 )
 
 data class ChangePasswordRequest(
-    val currentPassword: String,
-    val newPassword: String
+    val password: String
 )
