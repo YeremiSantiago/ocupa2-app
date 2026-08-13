@@ -8,11 +8,11 @@ import retrofit2.http.POST
 interface AuthApiService {
 
     @POST("auth/login")
-    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
+    suspend fun login(@Body request: LoginRequest): Response<AuthResponse<AuthData>>
 
     @POST("auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
+    suspend fun register(@Body request: RegisterRequest): Response<AuthResponse<AuthData>>
 
     @POST("auth/forgot-password")
-    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<AuthResponse>
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<AuthResponse<Any>>
 }

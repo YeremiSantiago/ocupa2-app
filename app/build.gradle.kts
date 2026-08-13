@@ -64,6 +64,11 @@ dependencies {
 
     // Maps
     implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
+    
+    // Permissions
+    implementation(libs.accompanist.permissions)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
@@ -73,6 +78,9 @@ dependencies {
 
     // Google Fonts
     implementation(libs.androidx.compose.ui.text.google.fonts)
+    
+    // Material Icons Extended
+    implementation(libs.androidx.compose.material.icons.extended)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

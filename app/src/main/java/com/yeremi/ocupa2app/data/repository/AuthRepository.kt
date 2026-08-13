@@ -12,22 +12,23 @@ class AuthRepository(
 
     val token: Flow<String?> = sessionManager.tokenFlow
 
-    suspend fun login(email: String, password: String): Result<AuthResponse> {
+    suspend fun login(email: String, password: String): Result<AuthData> {
         return try {
             val response = apiService.login(LoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
-                val authResponse = response.body()!!
-                if (authResponse.ok && authResponse.data?.token != null) {
-                    sessionManager.saveToken(authResponse.data.token)
-                    Result.success(authResponse)
+                val body = response.body()!!
+                if (body.ok && body.data?.token != null) {
+                    val fullToken = "${body.data.tokenType ?: "Bearer"} ${body.data.token}"
+                    sessionManager.saveToken(fullToken)
+                    Result.success(body.data)
                 } else {
-                    Result.failure(Exception("Error en la respuesta del servidor"))
+                    Result.failure(Exception(body.message ?: "Error en la respuesta del servidor"))
                 }
             } else {
-                Result.failure(Exception("Error de red: ${response.code()}"))
+                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
         }
     }
 
@@ -37,31 +38,43 @@ class AuthRepository(
         lastName: String,
         password: String,
         referralMatricula: String
-    ): Result<AuthResponse> {
+    ): Result<AuthData> {
         return try {
             val response = apiService.register(
                 RegisterRequest(email, firstName, lastName, password, referralMatricula)
             )
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                val body = response.body()!!
+                if (body.ok && body.data?.token != null) {
+                    val fullToken = "${body.data.tokenType ?: "Bearer"} ${body.data.token}"
+                    sessionManager.saveToken(fullToken)
+                    Result.success(body.data)
+                } else {
+                    Result.failure(Exception(body.message ?: "Error en el registro"))
+                }
             } else {
-                Result.failure(Exception("Error de red: ${response.code()}"))
+                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
         }
     }
 
-    suspend fun forgotPassword(email: String, referralMatricula: String): Result<AuthResponse> {
+    suspend fun forgotPassword(email: String, referralMatricula: String): Result<String> {
         return try {
             val response = apiService.forgotPassword(ForgotPasswordRequest(email, referralMatricula))
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                val body = response.body()!!
+                if (body.ok) {
+                    Result.success(body.message ?: "Correo enviado")
+                } else {
+                    Result.failure(Exception(body.message ?: "Error al procesar solicitud"))
+                }
             } else {
-                Result.failure(Exception("Error de red: ${response.code()}"))
+                Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error de conexión. Verifica tu internet e inténtalo de nuevo."))
         }
     }
 
