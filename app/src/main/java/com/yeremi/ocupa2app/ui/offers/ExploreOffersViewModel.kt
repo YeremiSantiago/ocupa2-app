@@ -1,5 +1,6 @@
 package com.yeremi.ocupa2app.ui.offers
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yeremi.ocupa2app.data.repository.ProfileRepository
@@ -12,6 +13,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewModel() {
+
+    companion object {
+        private const val TAG = "ExploreOffersVM"
+        private const val PAGE_LIMIT = 10
+    }
 
     private val _jobTypes = MutableStateFlow<List<JobType>>(emptyList())
     val jobTypes: StateFlow<List<JobType>> = _jobTypes
@@ -28,8 +34,8 @@ class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewMo
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val _selectedJobTypeId = MutableStateFlow<Int?>(null)
-    val selectedJobTypeId: StateFlow<Int?> = _selectedJobTypeId
+    private val _selectedJobTypeId = MutableStateFlow<String?>(null)
+    val selectedJobTypeId: StateFlow<String?> = _selectedJobTypeId
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
@@ -45,9 +51,15 @@ class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewMo
 
     private fun loadJobTypes() {
         viewModelScope.launch {
-            repository.getJobTypes().onSuccess {
-                _jobTypes.value = it
-            }
+            Log.d(TAG, "→ GET /job-types")
+            repository.getJobTypes()
+                .onSuccess { types ->
+                    Log.d(TAG, "✓ job-types: ${types.size} tipos → $types")
+                    _jobTypes.value = types
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "✗ job-types error: ${error.message}")
+                }
         }
     }
 
@@ -61,22 +73,27 @@ class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewMo
 
         viewModelScope.launch {
             if (isRefresh) _isLoading.value = true else _isLoadingMore.value = true
-            
-            repository.getOffers(_searchQuery.value, _selectedJobTypeId.value, currentPage)
-                .onSuccess { response ->
+
+            val searchParam = _searchQuery.value.trim().ifEmpty { null }
+            Log.d(TAG, "→ GET /offers | search=$searchParam | jobTypeId=${_selectedJobTypeId.value} | page=$currentPage")
+
+            repository.getOffers(searchParam, _selectedJobTypeId.value, currentPage, PAGE_LIMIT)
+                .onSuccess { result ->
+                    Log.d(TAG, "✓ offers recibidos=${result.offers.size} | hasMore=${result.hasMore}")
                     if (isRefresh) {
-                        _offers.value = response.offers
+                        _offers.value = result.offers
                     } else {
-                        _offers.value = _offers.value + response.offers
+                        _offers.value = _offers.value + result.offers
                     }
                     currentPage++
-                    hasMorePages = currentPage <= response.totalPages
+                    hasMorePages = result.hasMore
                     _errorMessage.value = null
                 }
-                .onFailure {
-                    _errorMessage.value = it.message
+                .onFailure { error ->
+                    Log.e(TAG, "✗ offers error: ${error.message}")
+                    _errorMessage.value = error.message
                 }
-            
+
             if (isRefresh) _isLoading.value = false else _isLoadingMore.value = false
         }
     }
@@ -90,25 +107,25 @@ class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewMo
         }
     }
 
-    fun onJobTypeSelected(id: Int?) {
+    fun onJobTypeSelected(id: String?) {
         _selectedJobTypeId.value = id
         loadOffers()
     }
 
-    fun toggleLike(offerId: Int) {
+    fun toggleLike(offerId: String) {
         val offer = _offers.value.find { it.id == offerId } ?: return
-        val currentLiked = offer.isLiked
-        
+        val currentLiked = offer.likedByMe
+
         // Optimistic update
         _offers.value = _offers.value.map {
-            if (it.id == offerId) it.copy(isLiked = !currentLiked) else it
+            if (it.id == offerId) it.copy(likedByMe = !currentLiked) else it
         }
 
         viewModelScope.launch {
             repository.toggleLike(offerId, currentLiked).onFailure {
-                // Revert on failure
-                _offers.value = _offers.value.map {
-                    if (it.id == offerId) it.copy(isLiked = currentLiked) else it
+                Log.e(TAG, "✗ toggleLike error: ${it.message}")
+                _offers.value = _offers.value.map { o ->
+                    if (o.id == offerId) o.copy(likedByMe = currentLiked) else o
                 }
             }
         }

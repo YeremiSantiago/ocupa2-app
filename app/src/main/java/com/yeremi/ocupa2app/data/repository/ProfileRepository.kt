@@ -60,13 +60,16 @@ class ProfileRepository(private val apiService: ProfileApiService) {
         }
     }
 
-    suspend fun getOffers(search: String?, jobTypeId: Int?, page: Int, limit: Int = 10): Result<OfferResponse> {
+    suspend fun getOffers(search: String?, jobTypeId: String?, page: Int, limit: Int = 10): Result<OfferPageResult> {
         return try {
             val response = apiService.getOffers(search, jobTypeId, page, limit)
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
                 if (body.ok && body.data != null) {
-                    Result.success(body.data)
+                    val offers = body.data
+                    // Si recibimos menos items que el limit, no hay más páginas
+                    val hasMore = offers.size >= limit
+                    Result.success(OfferPageResult(offers, hasMore))
                 } else {
                     Result.failure(Exception(body.message ?: "Error al obtener ofertas"))
                 }
@@ -78,7 +81,7 @@ class ProfileRepository(private val apiService: ProfileApiService) {
         }
     }
 
-    suspend fun toggleLike(offerId: Int, isLiked: Boolean): Result<Unit> {
+    suspend fun toggleLike(offerId: String, isLiked: Boolean): Result<Unit> {
         return try {
             val response = if (isLiked) apiService.unlikeOffer(offerId) else apiService.likeOffer(offerId)
             if (response.isSuccessful && response.body() != null) {

@@ -1,5 +1,6 @@
 package com.yeremi.ocupa2app.network
 
+import android.util.Log
 import com.yeremi.ocupa2app.data.local.SessionManager
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
@@ -24,32 +25,42 @@ object NetworkModule {
     }
 
     private fun createOkHttpClient(sessionManager: SessionManager): OkHttpClient {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
+        // 1. Auth interceptor — añade Bearer token antes del logging
+        val authInterceptor = Interceptor { chain ->
+            val token = runBlocking { sessionManager.tokenFlow.firstOrNull() }
+            val requestBuilder = chain.request().newBuilder()
+            if (!token.isNullOrEmpty()) {
+                // Añade "Bearer " si el token guardado no lo incluye ya
+                val bearer = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                requestBuilder.addHeader("Authorization", bearer)
+                Log.d("OCUPA2_NET", "Auth header → $bearer")
+            } else {
+                Log.w("OCUPA2_NET", "⚠ Sin token — request sin Authorization")
+            }
+            chain.proceed(requestBuilder.build())
+        }
+
+        // 2. Logging interceptor — corre DESPUÉS del auth para ver los headers inyectados
+        val loggingInterceptor = HttpLoggingInterceptor { message ->
+            Log.d("OCUPA2_HTTP", message)
+        }.apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
-        val authInterceptor = Interceptor { chain ->
-            val token = runBlocking { sessionManager.tokenFlow.firstOrNull() }
-            val request = chain.request().newBuilder().apply {
-                if (!token.isNullOrEmpty()) {
-                    addHeader("Authorization", token)
-                }
-            }.build()
-            chain.proceed(request)
-        }
-
+        // 3. Error interceptor — detecta 401 y limpia sesión
         val errorInterceptor = Interceptor { chain ->
             val response = chain.proceed(chain.request())
             if (response.code == 401) {
+                Log.e("OCUPA2_NET", "401 Unauthorized → limpiando sesión")
                 runBlocking { sessionManager.clearSession() }
             }
             response
         }
 
         return OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
-            .addInterceptor(authInterceptor)
-            .addInterceptor(errorInterceptor)
+            .addInterceptor(authInterceptor)   // 1° inyecta el token
+            .addInterceptor(loggingInterceptor) // 2° loguea con headers reales
+            .addInterceptor(errorInterceptor)  // 3° maneja errores
             .build()
     }
 

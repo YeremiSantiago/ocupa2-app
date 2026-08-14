@@ -9,35 +9,47 @@ data class ProfileUpdateRequest(
 )
 
 data class JobType(
-    val id: Int,
-    val name: String,
-    val icon: String?
+    val id: String,
+    val key: String,
+    val name: String
 )
 
-data class OfferResponse(
-    val offers: List<Offer>,
-    val total: Int,
-    val page: Int,
-    val totalPages: Int
+// ── Modelos de Oferta (según JSON real de la API) ──────────────────────
+
+data class OfferLocation(
+    val lat: Double?,
+    val lng: Double?
+)
+
+data class OfferPayment(
+    val amount: Double?,
+    val currency: String?,
+    val period: String?
 )
 
 data class Offer(
-    val id: Int,
-    val title: String,
-    val description: String,
-    val jobType: JobTypeShort,
-    val contractType: String,
-    val salary: Double,
-    val salaryPeriod: String,
-    val latitude: Double,
-    val longitude: Double,
-    val address: String,
-    val deadline: String,
-    val applicantsCount: Int,
-    val isLiked: Boolean,
-    val isUrgent: Boolean,
-    val isVerified: Boolean,
-    val status: String
+    val id: String,                          // String en la API
+    val jobTypeKey: String?,
+    val jobTypeName: String?,                // Título visible de la oferta
+    val contractType: String?,               // "fijo", "temporal", "por horas"
+    val description: String?,
+    val address: String?,
+    val location: OfferLocation?,            // { lat, lng }
+    val payment: OfferPayment?,              // { amount, currency, period }
+    val photo: String?,
+    val deadline: String?,
+    val status: String = "published",
+    val applicantsCount: Int = 0,
+    val likesCount: Int = 0,
+    val likedByMe: Boolean = false,          // isLiked en la UI
+    val isIdentityRevealed: Boolean = false
+)
+
+// La API devuelve data: List<Offer> directamente (sin wrapper de paginación)
+// Usamos una clase auxiliar para manejar la paginación localmente
+data class OfferPageResult(
+    val offers: List<Offer>,
+    val hasMore: Boolean
 )
 
 data class JobTypeShort(

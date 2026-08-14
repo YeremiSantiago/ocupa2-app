@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.map
 fun ExploreOffersScreen(
     viewModel: ExploreOffersViewModel,
     onNavigateToMap: () -> Unit,
-    onNavigateToDetail: (Int) -> Unit
+    onNavigateToDetail: (String) -> Unit
 ) {
     val jobTypes by viewModel.jobTypes.collectAsState()
     val offers by viewModel.offers.collectAsState()

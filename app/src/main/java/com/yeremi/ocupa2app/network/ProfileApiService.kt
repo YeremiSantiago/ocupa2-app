@@ -18,16 +18,16 @@ interface ProfileApiService {
     @GET("offers")
     suspend fun getOffers(
         @Query("search") search: String? = null,
-        @Query("jobTypeId") jobTypeId: Int? = null,
+        @Query("jobTypeId") jobTypeId: String? = null,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 10
-    ): Response<AuthResponse<OfferResponse>>
+    ): Response<AuthResponse<List<Offer>>>
 
     @POST("offers/{id}/like")
-    suspend fun likeOffer(@Path("id") id: Int): Response<AuthResponse<Unit>>
+    suspend fun likeOffer(@Path("id") id: String): Response<AuthResponse<Unit>>
 
     @DELETE("offers/{id}/like")
-    suspend fun unlikeOffer(@Path("id") id: Int): Response<AuthResponse<Unit>>
+    suspend fun unlikeOffer(@Path("id") id: String): Response<AuthResponse<Unit>>
 
     @PUT("me/password")
     suspend fun changePassword(@Body request: ChangePasswordRequest): Response<AuthResponse<Unit>>
