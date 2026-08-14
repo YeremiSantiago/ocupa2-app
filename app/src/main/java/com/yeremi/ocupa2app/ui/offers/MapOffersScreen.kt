@@ -42,7 +42,7 @@ fun MapOffersScreen(
     viewModel: MapOffersViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToList: () -> Unit,
-    onNavigateToDetail: (Int) -> Unit
+    onNavigateToDetail: (String) -> Unit
 ) {
     val offers by viewModel.offers.collectAsState()
     val selectedOffer by viewModel.selectedOffer.collectAsState()
@@ -73,9 +73,11 @@ fun MapOffersScreen(
     // Animar cámara al marcador seleccionado
     LaunchedEffect(selectedOffer) {
         selectedOffer?.let {
+            val lat = it.location?.lat ?: return@let
+            val lng = it.location?.lng ?: return@let
             cameraPositionState.animate(
                 com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
-                    LatLng(it.latitude, it.longitude), 14f
+                    LatLng(lat, lng), 14f
                 )
             )
         }
@@ -94,20 +96,20 @@ fun MapOffersScreen(
             uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false)
         ) {
             offers.forEach { offer ->
+                val lat = offer.location?.lat ?: return@forEach
+                val lng = offer.location?.lng ?: return@forEach
                 val isSelected = offer.id == selectedOffer?.id
 
-                // Color semántico aplicado como BitmapDescriptor (prioridad: urgente > verificado > normal)
-                val markerHue = when {
-                    offer.isUrgent -> BitmapDescriptorFactory.HUE_ORANGE     // SolarOrange
-                    offer.isVerified -> BitmapDescriptorFactory.HUE_CYAN     // ElectricTeal
-                    else -> BitmapDescriptorFactory.HUE_GREEN                // AcidLime
-                }
+                // AcidLime (verde) = normal, ElectricTeal (cyan) = tiene foto
+                val markerHue = if (!offer.photo.isNullOrEmpty())
+                    BitmapDescriptorFactory.HUE_CYAN
+                else
+                    BitmapDescriptorFactory.HUE_GREEN
 
                 Marker(
-                    state = MarkerState(position = LatLng(offer.latitude, offer.longitude)),
-                    title = offer.title,
+                    state = MarkerState(position = LatLng(lat, lng)),
+                    title = offer.jobTypeName ?: "Oferta",
                     icon = BitmapDescriptorFactory.defaultMarker(markerHue),
-                    // Marcador seleccionado: opacidad total. Resto: semitransparentes.
                     alpha = if (isSelected) 1.0f else 0.6f,
                     zIndex = if (isSelected) 1f else 0f,
                     onClick = {
@@ -245,13 +247,13 @@ fun MapOffersScreen(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                text = offer.title,
+                                text = offer.jobTypeName ?: "Oferta",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "${offer.jobType.name} · ${translateContractType(offer.contractType)}",
+                                text = "${translateContractType(offer.contractType ?: "")}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -260,13 +262,11 @@ fun MapOffersScreen(
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "RD$ ${offer.salary.toInt()}/${offer.salaryPeriod}",
+                                    text = offer.payment?.let { "RD$ ${it.amount?.toInt() ?: 0}/${it.period ?: ""}" } ?: "–",
                                     style = MaterialTheme.typography.labelLarge,
-                                    // AcidLime es semántico — salario en verde es intencional
                                     color = AcidLime
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
-                                // Solo mostrar distancia si hay permiso de ubicación
                                 if (hasLocationPermission) {
                                     Icon(
                                         Icons.Default.LocationOn,
@@ -275,7 +275,7 @@ fun MapOffersScreen(
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Text(
-                                        text = offer.address,
+                                        text = offer.address ?: "",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         maxLines = 1,
@@ -323,20 +323,20 @@ fun MapOffersScreen(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        text = offer.title,
+                                        text = offer.jobTypeName ?: "Oferta",
                                         color = MaterialTheme.colorScheme.onSurface,
                                         style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = offer.jobType.name,
+                                        text = translateContractType(offer.contractType ?: ""),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                     Text(
-                                        text = "RD$ ${offer.salary.toInt()}",
-                                        // AcidLime es semántico — salario en verde es intencional
+                                        text = "RD$ ${offer.payment?.amount?.toInt() ?: 0}",
                                         color = AcidLime,
                                         style = MaterialTheme.typography.labelLarge
                                     )

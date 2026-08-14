@@ -26,11 +26,11 @@ import com.yeremi.ocupa2app.ui.theme.SolarOrange
 
 // Rutas del flujo principal (con navbar)
 sealed class MainScreen(val route: String) {
-    object Home       : MainScreen("main_home")
-    object Explore    : MainScreen("main_explore")
-    object Publish    : MainScreen("main_publish")
-    object MySpace    : MainScreen("main_myspace")
-    object Profile    : MainScreen("main_profile")
+    object Home     : MainScreen("main_home")
+    object Explore  : MainScreen("main_explore")
+    object Map      : MainScreen("main_map")
+    object MyApps   : MainScreen("main_myapps")
+    object Profile  : MainScreen("main_profile")
 }
 
 // Definición de los ítems de la barra
@@ -50,24 +50,24 @@ val bottomNavItems = listOf(
         accentColor = AcidLime
     ),
     BottomNavItem(
-        route = MainScreen.Publish.route,
-        label = "Publicar",
-        icon = Icons.Outlined.AddCircle,
-        selectedIcon = Icons.Filled.AddCircle,
-        accentColor = SolarOrange
+        route = MainScreen.Map.route,
+        label = "Mapa",
+        icon = Icons.Outlined.Map,
+        selectedIcon = Icons.Filled.Map,
+        accentColor = ElectricTeal
     ),
     BottomNavItem(
-        route = MainScreen.MySpace.route,
-        label = "Mi Espacio",
-        icon = Icons.Outlined.Folder,
-        selectedIcon = Icons.Filled.Folder,
-        accentColor = ElectricTeal
+        route = MainScreen.MyApps.route,
+        label = "Mis Apps",
+        icon = Icons.Outlined.GridView,
+        selectedIcon = Icons.Filled.GridView,
+        accentColor = AcidLime
     ),
     BottomNavItem(
         route = MainScreen.Profile.route,
         label = "Perfil",
-        icon = Icons.Outlined.AccountCircle,
-        selectedIcon = Icons.Filled.AccountCircle,
+        icon = Icons.Outlined.Person,
+        selectedIcon = Icons.Filled.Person,
         accentColor = AcidLime
     )
 )
@@ -105,7 +105,7 @@ fun MainScaffold(
                 ExploreOffersScreen(
                     viewModel = offersViewModel,
                     onNavigateToMap = {
-                        mainNavController.navigate("explore_map")
+                        mainNavController.navigate(MainScreen.Map.route)
                     },
                     onNavigateToDetail = { id ->
                         mainNavController.navigate("offer_detail/$id")
@@ -113,25 +113,26 @@ fun MainScaffold(
                 )
             }
 
-            composable("explore_map") {
+            composable(MainScreen.Map.route) {
                 MapOffersScreen(
                     viewModel = mapOffersViewModel,
                     onNavigateBack = { mainNavController.popBackStack() },
-                    onNavigateToList = { mainNavController.popBackStack() },
+                    onNavigateToList = {
+                        mainNavController.navigate(MainScreen.Explore.route) {
+                            popUpTo(MainScreen.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     onNavigateToDetail = { id ->
                         mainNavController.navigate("offer_detail/$id")
                     }
                 )
             }
 
-            composable(MainScreen.Publish.route) {
-                // TODO: PublishOfferScreen - pendiente implementación
-                PlaceholderScreen(title = "Publicar Oferta")
-            }
-
-            composable(MainScreen.MySpace.route) {
-                // TODO: MySpaceScreen (Mis Ofertas / Mis Aplicaciones / Mis Pagos)
-                PlaceholderScreen(title = "Mi Espacio")
+            composable(MainScreen.MyApps.route) {
+                // TODO: MyApplicationsScreen - Mis solicitudes de empleo
+                PlaceholderScreen(title = "Mis Apps")
             }
 
             composable(MainScreen.Profile.route) {

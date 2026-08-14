@@ -41,12 +41,13 @@ class MapOffersViewModel(private val repository: ProfileRepository) : ViewModel(
     fun loadOffers() {
         viewModelScope.launch {
             _isLoading.value = true
-            // Llamar con limit=50 para tener suficientes marcadores en el mapa
             repository.getOffers(null, null, 1, limit = 50)
-                .onSuccess { response ->
-                    // Filtrar ofertas con coordenadas inválidas (0.0 produce marcadores en el océano)
-                    _offers.value = response.offers.filter { offer ->
-                        offer.latitude != 0.0 && offer.longitude != 0.0
+                .onSuccess { result ->
+                    // Filtrar ofertas sin coordenadas válidas
+                    _offers.value = result.offers.filter { offer ->
+                        val lat = offer.location?.lat
+                        val lng = offer.location?.lng
+                        lat != null && lng != null && lat != 0.0 && lng != 0.0
                     }
                     if (_selectedOffer.value == null && _offers.value.isNotEmpty()) {
                         _selectedOffer.value = _offers.value.first()
