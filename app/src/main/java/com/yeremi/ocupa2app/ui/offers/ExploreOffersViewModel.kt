@@ -34,15 +34,12 @@ class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewMo
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val _selectedJobTypeId = MutableStateFlow<String?>(null)
-    val selectedJobTypeId: StateFlow<String?> = _selectedJobTypeId
-
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery
+    private val _selectedJobTypeKey = MutableStateFlow<String?>(null)
+    val selectedJobTypeKey: StateFlow<String?> = _selectedJobTypeKey
 
     private var currentPage = 1
     private var hasMorePages = true
-    private var searchJob: Job? = null
+    private var currentJob: Job? = null
 
     init {
         loadJobTypes()
@@ -74,10 +71,9 @@ class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewMo
         viewModelScope.launch {
             if (isRefresh) _isLoading.value = true else _isLoadingMore.value = true
 
-            val searchParam = _searchQuery.value.trim().ifEmpty { null }
-            Log.d(TAG, "→ GET /offers | search=$searchParam | jobTypeId=${_selectedJobTypeId.value} | page=$currentPage")
+            Log.d(TAG, "→ GET /offers | jobTypeKey=${_selectedJobTypeKey.value} | page=$currentPage")
 
-            repository.getOffers(searchParam, _selectedJobTypeId.value, currentPage, PAGE_LIMIT)
+            repository.getOffers(null, _selectedJobTypeKey.value, currentPage, PAGE_LIMIT)
                 .onSuccess { result ->
                     Log.d(TAG, "✓ offers recibidos=${result.offers.size} | hasMore=${result.hasMore}")
                     if (isRefresh) {
@@ -98,17 +94,8 @@ class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewMo
         }
     }
 
-    fun onSearchQueryChanged(query: String) {
-        _searchQuery.value = query
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            delay(500)
-            loadOffers()
-        }
-    }
-
-    fun onJobTypeSelected(id: String?) {
-        _selectedJobTypeId.value = id
+    fun onJobTypeSelected(key: String?) {
+        _selectedJobTypeKey.value = key
         loadOffers()
     }
 
@@ -132,8 +119,7 @@ class ExploreOffersViewModel(private val repository: ProfileRepository) : ViewMo
     }
 
     fun clearFilters() {
-        _searchQuery.value = ""
-        _selectedJobTypeId.value = null
+        _selectedJobTypeKey.value = null
         loadOffers()
     }
 }

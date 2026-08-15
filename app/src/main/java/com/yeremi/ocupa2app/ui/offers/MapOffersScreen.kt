@@ -4,10 +4,14 @@ import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -18,6 +22,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -84,10 +90,24 @@ fun MapOffersScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        val scaffoldState = rememberBottomSheetScaffoldState(
+            bottomSheetState = rememberStandardBottomSheetState(
+                initialValue = SheetValue.PartiallyExpanded,
+                skipHiddenState = true
+            )
+        )
 
-        // ── 1. Google Map ─────────────────────────────────────────────────
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
+        BottomSheetScaffold(
+            scaffoldState = scaffoldState,
+            sheetPeekHeight = 220.dp,
+            sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            sheetContainerColor = MaterialTheme.colorScheme.surface,
+            content = { innerPadding ->
+                Box(modifier = Modifier.fillMaxSize().padding(bottom = innerPadding.calculateBottomPadding())) {
+
+                    // ── 1. Google Map ─────────────────────────────────────────────────
+                    GoogleMap(
+                        modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = MapProperties(
                 mapStyleOptions = mapStyleOptions,
@@ -101,22 +121,54 @@ fun MapOffersScreen(
                 val isSelected = offer.id == selectedOffer?.id
 
                 // AcidLime (verde) = normal, ElectricTeal (cyan) = tiene foto
-                val markerHue = if (!offer.photo.isNullOrEmpty())
-                    BitmapDescriptorFactory.HUE_CYAN
-                else
-                    BitmapDescriptorFactory.HUE_GREEN
+                val bgColor = if (!offer.photo.isNullOrEmpty()) ElectricTeal else AcidLime
 
-                Marker(
+                MarkerComposable(
+                    keys = arrayOf<Any>(offer.id, isSelected),
                     state = MarkerState(position = LatLng(lat, lng)),
                     title = offer.jobTypeName ?: "Oferta",
-                    icon = BitmapDescriptorFactory.defaultMarker(markerHue),
-                    alpha = if (isSelected) 1.0f else 0.6f,
-                    zIndex = if (isSelected) 1f else 0f,
                     onClick = {
                         viewModel.selectOffer(offer)
                         false
                     }
-                )
+                ) {
+                    val infiniteTransition = rememberInfiniteTransition()
+                    val pulseScale by infiniteTransition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = if (isSelected) 1.6f else 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1000, easing = LinearOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "PulseAnimation"
+                    )
+
+                    Box(contentAlignment = Alignment.Center) {
+                        if (isSelected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp * pulseScale)
+                                    .clip(CircleShape)
+                                    .background(bgColor.copy(alpha = 0.4f))
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(bgColor)
+                                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.WorkOutline,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -157,33 +209,16 @@ fun MapOffersScreen(
             }
         }
 
-        // ── 3. Bottom Sheet ───────────────────────────────────────────────
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .background(
-                    MaterialTheme.colorScheme.surface,
-                    RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-                )
-                .padding(bottom = 16.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                // Handle bar
-                Box(
+                } // Cierra Box del content
+            }, // Cierra content
+            sheetContent = {
+                // ── 3. Bottom Sheet ───────────────────────────────────────────────
+                Column(
                     modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                            RoundedCornerShape(2.dp)
-                        )
-                        .align(Alignment.CenterHorizontally)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Empleos cercanos",
                         style = MaterialTheme.typography.headlineSmall,
@@ -236,7 +271,19 @@ fun MapOffersScreen(
                 }
 
                 // ── Selected Offer Card ───────────────────────────────────
-                selectedOffer?.let { offer ->
+                val displayedOffer = remember { mutableStateOf(selectedOffer) }
+                LaunchedEffect(selectedOffer) {
+                    if (selectedOffer != null) {
+                        displayedOffer.value = selectedOffer
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = selectedOffer != null,
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                ) {
+                    displayedOffer.value?.let { offer ->
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(12.dp),
@@ -303,6 +350,7 @@ fun MapOffersScreen(
                             }
                         }
                     }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -347,6 +395,7 @@ fun MapOffersScreen(
                 }
             }
         }
+        )
 
         // ── 4. Overlay de Permiso ─────────────────────────────────────────
         // Se muestra si el permiso no está concedido Y el usuario no eligió "ver sin ubicación"

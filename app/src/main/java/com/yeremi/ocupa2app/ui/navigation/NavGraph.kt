@@ -26,6 +26,7 @@ sealed class Screen(val route: String) {
 @Composable
 fun NavGraph(
     navController: NavHostController,
+    startDestination: String = Screen.Login.route,
     authViewModel: AuthViewModel,
     profileViewModel: CompleteProfileViewModel,
     changePasswordViewModel: ChangePasswordViewModel,
@@ -34,7 +35,7 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = startDestination
     ) {
         // ──────────────────────────────────────────────
         // FLUJO DE AUTENTICACIÓN (sin Bottom NavBar)

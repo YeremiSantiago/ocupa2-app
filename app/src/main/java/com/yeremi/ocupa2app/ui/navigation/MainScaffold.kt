@@ -151,6 +151,13 @@ fun MainScaffold(
                     onNavigateBack = { mainNavController.popBackStack() }
                 )
             }
+
+            composable(
+                route = "offer_detail/{id}",
+            ) { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("id")
+                PlaceholderScreen(title = "Detalle de Oferta\nID: $id")
+            }
         }
     }
 }
