@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.yeremi.ocupa2app.data.local.SessionManager
 import com.yeremi.ocupa2app.data.repository.AuthRepository
 import com.yeremi.ocupa2app.data.repository.ProfileRepository
@@ -40,20 +42,35 @@ class MainActivity : ComponentActivity() {
         
         enableEdgeToEdge()
         setContent {
+            val token by sessionManager.tokenFlow.collectAsState(initial = "LOADING")
+
             Ocupa2AppTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = com.yeremi.ocupa2app.ui.theme.Obsidian
-                ) {
-                    val navController = rememberNavController()
-                    NavGraph(
-                        navController = navController,
-                        authViewModel = authViewModel,
-                        profileViewModel = profileViewModel,
-                        changePasswordViewModel = changePasswordViewModel,
-                        offersViewModel = offersViewModel,
-                        mapOffersViewModel = mapOffersViewModel
-                    )
+                if (token == "LOADING") {
+                    // Pantalla de carga (Splash) muy breve mientras lee DataStore
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = com.yeremi.ocupa2app.ui.theme.Obsidian
+                    ) {
+                        // Pantalla negra de carga inicial
+                    }
+                } else {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = com.yeremi.ocupa2app.ui.theme.Obsidian
+                    ) {
+                        val navController = rememberNavController()
+                        val startDest = if (token.isNullOrEmpty()) com.yeremi.ocupa2app.ui.navigation.Screen.Login.route else com.yeremi.ocupa2app.ui.navigation.Screen.Main.route
+                        
+                        NavGraph(
+                            navController = navController,
+                            startDestination = startDest,
+                            authViewModel = authViewModel,
+                            profileViewModel = profileViewModel,
+                            changePasswordViewModel = changePasswordViewModel,
+                            offersViewModel = offersViewModel,
+                            mapOffersViewModel = mapOffersViewModel
+                        )
+                    }
                 }
             }
         }
