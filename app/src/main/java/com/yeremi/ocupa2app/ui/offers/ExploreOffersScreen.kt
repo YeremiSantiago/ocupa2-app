@@ -40,8 +40,7 @@ fun ExploreOffersScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isLoadingMore by viewModel.isLoadingMore.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val selectedJobTypeId by viewModel.selectedJobTypeId.collectAsState()
+    val selectedJobTypeKey by viewModel.selectedJobTypeKey.collectAsState()
 
     val listState = rememberLazyListState()
 
@@ -86,29 +85,7 @@ fun ExploreOffersScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
-        ) {
-            // Search Bar
-            TextField(
-                value = searchQuery,
-                onValueChange = { viewModel.onSearchQueryChanged(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                placeholder = { Text("Buscar empleos...", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
-
-            // Dynamic Filter Chips from API
+        ) {            // Dynamic Filter Chips from API
             LazyRow(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -116,15 +93,15 @@ fun ExploreOffersScreen(
                 item {
                     FilterChipItem(
                         text = "Todos",
-                        isSelected = selectedJobTypeId == null,
+                        isSelected = selectedJobTypeKey == null,
                         onClick = { viewModel.onJobTypeSelected(null) }
                     )
                 }
                 items(jobTypes) { jobType ->
                     FilterChipItem(
                         text = jobType.name,
-                        isSelected = selectedJobTypeId == jobType.id,
-                        onClick = { viewModel.onJobTypeSelected(jobType.id) }
+                        isSelected = selectedJobTypeKey == jobType.key,
+                        onClick = { viewModel.onJobTypeSelected(jobType.key) }
                     )
                 }
             }

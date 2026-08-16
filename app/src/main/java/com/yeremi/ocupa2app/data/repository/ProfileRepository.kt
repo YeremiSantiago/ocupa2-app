@@ -60,9 +60,9 @@ class ProfileRepository(private val apiService: ProfileApiService) {
         }
     }
 
-    suspend fun getOffers(search: String?, jobTypeId: String?, page: Int, limit: Int = 10): Result<OfferPageResult> {
+    suspend fun getOffers(search: String?, jobTypeKey: String?, page: Int, limit: Int = 10): Result<OfferPageResult> {
         return try {
-            val response = apiService.getOffers(search, jobTypeId, page, limit)
+            val response = apiService.getOffers(search, jobTypeKey, page, limit)
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
                 if (body.ok && body.data != null) {

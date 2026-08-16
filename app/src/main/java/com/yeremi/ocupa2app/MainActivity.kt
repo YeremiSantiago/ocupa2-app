@@ -9,9 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-
 import com.yeremi.ocupa2app.data.local.SessionManager
 import com.yeremi.ocupa2app.data.repository.AuthRepository
 import com.yeremi.ocupa2app.data.repository.MyOffersRepository
@@ -45,12 +46,24 @@ class MainActivity : ComponentActivity() {
         val dependencies = AppDependencies(applicationContext)
 
         setContent {
+            val token by dependencies.sessionManager.tokenFlow.collectAsState(initial = "LOADING")
+
             Ocupa2AppTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Obsidian
-                ) {
-                    Ocupa2Navigation(dependencies)
+                if (token == "LOADING") {
+                    // Pantalla de carga (Splash) muy breve mientras lee DataStore
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = Obsidian
+                    ) {
+                        // Pantalla negra de carga inicial
+                    }
+                } else {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = Obsidian
+                    ) {
+                        Ocupa2Navigation(dependencies, token)
+                    }
                 }
             }
         }
@@ -75,7 +88,7 @@ private class AppDependencies(
     // SESSION
     // ============================================================
 
-    private val sessionManager =
+    val sessionManager =
         SessionManager(applicationContext)
 
 
@@ -181,15 +194,23 @@ private class AppDependencies(
  */
 @Composable
 private fun Ocupa2Navigation(
-    dependencies: AppDependencies
+    dependencies: AppDependencies,
+    token: String?
 ) {
 
     // Controlador de navegación
     val navController = rememberNavController()
 
+    // Destino inicial según si hay sesión activa
+    val startDest = if (token.isNullOrEmpty())
+        com.yeremi.ocupa2app.ui.navigation.Screen.Login.route
+    else
+        com.yeremi.ocupa2app.ui.navigation.Screen.Main.route
+
     // NavGraph recibe todos los ViewModels
     NavGraph(
         navController = navController,
+        startDestination = startDest,
 
         // Auth
         authViewModel = dependencies.authViewModel,

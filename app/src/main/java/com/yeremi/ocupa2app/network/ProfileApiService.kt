@@ -18,7 +18,7 @@ interface ProfileApiService {
     @GET("offers")
     suspend fun getOffers(
         @Query("search") search: String? = null,
-        @Query("jobTypeId") jobTypeId: String? = null,
+        @Query("jobTypeKey") jobTypeKey: String? = null,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 10
     ): Response<AuthResponse<List<Offer>>>
