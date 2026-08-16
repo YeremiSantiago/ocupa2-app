@@ -27,9 +27,23 @@ import com.yeremi.ocupa2app.ui.theme.*
 
 @Composable
 fun ProfileScreen(
-    viewModel: CompleteProfileViewModel,
-    onNavigateToChangePassword: () -> Unit,
-    onLogout: () -> Unit
+    viewModel:
+    CompleteProfileViewModel,
+
+    onNavigateToChangePassword:
+        () -> Unit,
+
+    onNavigateToExperiences:
+        () -> Unit,
+
+    onNavigateToPayments:
+        () -> Unit,
+
+    onNavigateToVideos:
+        () -> Unit,
+
+    onLogout:
+        () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val user = (uiState as? CompleteProfileViewModel.ProfileState.ProfileLoaded)?.user
@@ -163,6 +177,73 @@ fun ProfileScreen(
                 )
             }
         }
+
+        // ── Mi actividad ─────────────────────────────────────────────
+
+        Spacer(
+            modifier =
+                Modifier.height(
+                    20.dp
+                )
+        )
+
+        SectionLabel(
+            text =
+                "MI ACTIVIDAD"
+        )
+
+        ProfileActionCard(
+            icon =
+                Icons.Outlined.WorkHistory,
+            title =
+                "Experiencias",
+            subtitle =
+                "Agrega experiencia y certificados",
+            accentColor =
+                ElectricTeal,
+            onClick =
+                onNavigateToExperiences
+        )
+
+        Spacer(
+            modifier =
+                Modifier.height(
+                    10.dp
+                )
+        )
+
+        ProfileActionCard(
+            icon =
+                Icons.Outlined.ReceiptLong,
+            title =
+                "Mis pagos",
+            subtitle =
+                "Consulta tu historial de pagos",
+            accentColor =
+                AcidLime,
+            onClick =
+                onNavigateToPayments
+        )
+
+        Spacer(
+            modifier =
+                Modifier.height(
+                    10.dp
+                )
+        )
+
+        ProfileActionCard(
+            icon =
+                Icons.Outlined.PlayCircle,
+            title =
+                "Videos",
+            subtitle =
+                "Capacitación y tutoriales",
+            accentColor =
+                SolarOrange,
+            onClick =
+                onNavigateToVideos
+        )
 
         // ── Seguridad ─────────────────────────────────────────────────
         Spacer(modifier = Modifier.height(20.dp))

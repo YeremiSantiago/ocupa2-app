@@ -16,6 +16,11 @@ import com.yeremi.ocupa2app.ui.profile.CompleteProfileViewModel
 import com.yeremi.ocupa2app.ui.news.NewsViewModel
 import com.yeremi.ocupa2app.ui.publish.PublishOfferViewModel
 import com.yeremi.ocupa2app.ui.myoffers.MyOffersViewModel
+import com.yeremi.ocupa2app.ui.applications.MyApplicationsViewModel
+import com.yeremi.ocupa2app.ui.offers.OfferDetailViewModel
+import com.yeremi.ocupa2app.ui.payments.PaymentsViewModel
+import com.yeremi.ocupa2app.ui.profile.ExperiencesViewModel
+import com.yeremi.ocupa2app.ui.videos.VideosViewModel
 
 // Rutas del flujo de autenticación (sin navbar)
 sealed class Screen(val route: String) {
@@ -35,9 +40,29 @@ fun NavGraph(
     changePasswordViewModel: ChangePasswordViewModel,
     offersViewModel: ExploreOffersViewModel,
     mapOffersViewModel: MapOffersViewModel,
-    newsViewModel: NewsViewModel,
-    publishViewModel: PublishOfferViewModel,
-    myOffersViewModel: MyOffersViewModel
+    newsViewModel:
+    NewsViewModel,
+
+    publishViewModel:
+    PublishOfferViewModel,
+
+    myOffersViewModel:
+    MyOffersViewModel,
+
+    offerDetailViewModel:
+    OfferDetailViewModel,
+
+    myApplicationsViewModel:
+    MyApplicationsViewModel,
+
+    experiencesViewModel:
+    ExperiencesViewModel,
+
+    paymentsViewModel:
+    PaymentsViewModel,
+
+    videosViewModel:
+    VideosViewModel
 ) {
     NavHost(
         navController = navController,
@@ -133,6 +158,20 @@ fun NavGraph(
                 newsViewModel = newsViewModel,
                 publishViewModel = publishViewModel,
                 myOffersViewModel = myOffersViewModel,
+                offerDetailViewModel =
+                    offerDetailViewModel,
+
+                myApplicationsViewModel =
+                    myApplicationsViewModel,
+
+                experiencesViewModel =
+                    experiencesViewModel,
+
+                paymentsViewModel =
+                    paymentsViewModel,
+
+                videosViewModel =
+                    videosViewModel,
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) {
