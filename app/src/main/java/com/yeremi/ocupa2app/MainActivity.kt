@@ -2,7 +2,6 @@ package com.yeremi.ocupa2app
 
 import android.content.Context
 import android.os.Bundle
-
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,20 +18,24 @@ import com.yeremi.ocupa2app.data.repository.MyOffersRepository
 import com.yeremi.ocupa2app.data.repository.NewsRepository
 import com.yeremi.ocupa2app.data.repository.ProfileRepository
 import com.yeremi.ocupa2app.data.repository.PublishOfferRepository
-
+import com.yeremi.ocupa2app.data.repository.ZoibeRepository
 import com.yeremi.ocupa2app.network.NetworkModule
-
+import com.yeremi.ocupa2app.ui.applications.MyApplicationsViewModel
 import com.yeremi.ocupa2app.ui.auth.AuthViewModel
 import com.yeremi.ocupa2app.ui.myoffers.MyOffersViewModel
 import com.yeremi.ocupa2app.ui.navigation.NavGraph
 import com.yeremi.ocupa2app.ui.news.NewsViewModel
 import com.yeremi.ocupa2app.ui.offers.ExploreOffersViewModel
 import com.yeremi.ocupa2app.ui.offers.MapOffersViewModel
+import com.yeremi.ocupa2app.ui.offers.OfferDetailViewModel
+import com.yeremi.ocupa2app.ui.payments.PaymentsViewModel
 import com.yeremi.ocupa2app.ui.profile.ChangePasswordViewModel
 import com.yeremi.ocupa2app.ui.profile.CompleteProfileViewModel
+import com.yeremi.ocupa2app.ui.profile.ExperiencesViewModel
 import com.yeremi.ocupa2app.ui.publish.PublishOfferViewModel
 import com.yeremi.ocupa2app.ui.theme.Obsidian
 import com.yeremi.ocupa2app.ui.theme.Ocupa2AppTheme
+import com.yeremi.ocupa2app.ui.videos.VideosViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -111,6 +114,11 @@ private class AppDependencies(
     private val myOffersApiService =
         NetworkModule.provideMyOffersApiService(sessionManager)
 
+    private val zoibeApiService =
+        NetworkModule.provideZoibeApiService(
+            sessionManager
+        )
+
 
     // ============================================================
     // REPOSITORIES
@@ -140,6 +148,12 @@ private class AppDependencies(
     private val myOffersRepository =
         MyOffersRepository(
             myOffersApiService
+        )
+
+    private val zoibeRepository =
+        ZoibeRepository(
+            zoibeApiService,
+            publishApiService
         )
 
 
@@ -186,6 +200,31 @@ private class AppDependencies(
         MyOffersViewModel(
             myOffersRepository
         )
+
+    val offerDetailViewModel =
+        OfferDetailViewModel(
+            zoibeRepository
+        )
+
+    val myApplicationsViewModel =
+        MyApplicationsViewModel(
+            zoibeRepository
+        )
+
+    val experiencesViewModel =
+        ExperiencesViewModel(
+            zoibeRepository
+        )
+
+    val paymentsViewModel =
+        PaymentsViewModel(
+            zoibeRepository
+        )
+
+    val videosViewModel =
+        VideosViewModel(
+            zoibeRepository
+        )
 }
 
 
@@ -230,6 +269,23 @@ private fun Ocupa2Navigation(
         publishViewModel = dependencies.publishViewModel,
 
         // My Offers
-        myOffersViewModel = dependencies.myOffersViewModel
+        myOffersViewModel =
+            dependencies.myOffersViewModel,
+
+        // Zoibe
+        offerDetailViewModel =
+            dependencies.offerDetailViewModel,
+
+        myApplicationsViewModel =
+            dependencies.myApplicationsViewModel,
+
+        experiencesViewModel =
+            dependencies.experiencesViewModel,
+
+        paymentsViewModel =
+            dependencies.paymentsViewModel,
+
+        videosViewModel =
+            dependencies.videosViewModel
     )
 }

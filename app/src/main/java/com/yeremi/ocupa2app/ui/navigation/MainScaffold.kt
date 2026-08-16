@@ -8,7 +8,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,7 +26,16 @@ import com.yeremi.ocupa2app.ui.publish.PublishOfferViewModel
 import com.yeremi.ocupa2app.ui.myoffers.MyOffersViewModel
 import com.yeremi.ocupa2app.ui.theme.AcidLime
 import com.yeremi.ocupa2app.ui.theme.ElectricTeal
-import com.yeremi.ocupa2app.ui.theme.SolarOrange
+import com.yeremi.ocupa2app.ui.applications.MyApplicationsScreen
+import com.yeremi.ocupa2app.ui.applications.MyApplicationsViewModel
+import com.yeremi.ocupa2app.ui.offers.OfferDetailScreen
+import com.yeremi.ocupa2app.ui.offers.OfferDetailViewModel
+import com.yeremi.ocupa2app.ui.payments.PaymentsScreen
+import com.yeremi.ocupa2app.ui.payments.PaymentsViewModel
+import com.yeremi.ocupa2app.ui.profile.ExperiencesScreen
+import com.yeremi.ocupa2app.ui.profile.ExperiencesViewModel
+import com.yeremi.ocupa2app.ui.videos.VideosScreen
+import com.yeremi.ocupa2app.ui.videos.VideosViewModel
 
 // Rutas del flujo principal (con navbar)
 sealed class MainScreen(val route: String) {
@@ -84,9 +92,29 @@ fun MainScaffold(
     changePasswordViewModel: ChangePasswordViewModel,
     profileViewModel: CompleteProfileViewModel,
     newsViewModel: NewsViewModel,
-    publishViewModel: PublishOfferViewModel,
-    myOffersViewModel: MyOffersViewModel,
-    onLogout: () -> Unit
+    publishViewModel:
+    PublishOfferViewModel,
+
+    myOffersViewModel:
+    MyOffersViewModel,
+
+    offerDetailViewModel:
+    OfferDetailViewModel,
+
+    myApplicationsViewModel:
+    MyApplicationsViewModel,
+
+    experiencesViewModel:
+    ExperiencesViewModel,
+
+    paymentsViewModel:
+    PaymentsViewModel,
+
+    videosViewModel:
+    VideosViewModel,
+
+    onLogout:
+        () -> Unit
 ) {
     val mainNavController = rememberNavController()
 
@@ -167,18 +195,57 @@ fun MainScaffold(
                 )
             }
 
-            composable(MainScreen.MyApps.route) {
-                // TODO: MyApplicationsScreen - Mis solicitudes de empleo
-                PlaceholderScreen(title = "Mis Apps")
+            composable(
+                MainScreen.MyApps.route
+            ) {
+
+                MyApplicationsScreen(
+                    viewModel =
+                        myApplicationsViewModel,
+                    onNavigateToOffer = { id ->
+
+                        mainNavController.navigate(
+                            "offer_detail/$id"
+                        )
+                    }
+                )
             }
 
             composable(MainScreen.Profile.route) {
                 ProfileScreen(
-                    viewModel = profileViewModel,
+                    viewModel =
+                        profileViewModel,
+
                     onNavigateToChangePassword = {
-                        mainNavController.navigate("change_password")
+
+                        mainNavController.navigate(
+                            "change_password"
+                        )
                     },
-                    onLogout = onLogout
+
+                    onNavigateToExperiences = {
+
+                        mainNavController.navigate(
+                            "experiences"
+                        )
+                    },
+
+                    onNavigateToPayments = {
+
+                        mainNavController.navigate(
+                            "com/yeremi/ocupa2app/ui/payments"
+                        )
+                    },
+
+                    onNavigateToVideos = {
+
+                        mainNavController.navigate(
+                            "com/yeremi/ocupa2app/ui/videos"
+                        )
+                    },
+
+                    onLogout =
+                        onLogout
                 )
             }
 
@@ -289,10 +356,79 @@ fun MainScaffold(
             }
 
             composable(
-                route = "offer_detail/{id}",
+                "experiences"
+            ) {
+
+                ExperiencesScreen(
+                    viewModel =
+                        experiencesViewModel,
+                    onNavigateBack = {
+
+                        mainNavController
+                            .popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                "com/yeremi/ocupa2app/ui/payments"
+            ) {
+
+                PaymentsScreen(
+                    viewModel =
+                        paymentsViewModel,
+                    onNavigateBack = {
+
+                        mainNavController
+                            .popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                "com/yeremi/ocupa2app/ui/videos"
+            ) {
+
+                VideosScreen(
+                    viewModel =
+                        videosViewModel,
+                    onNavigateBack = {
+
+                        mainNavController
+                            .popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route =
+                    "offer_detail/{id}",
+                arguments =
+                    listOf(
+                        navArgument("id") {
+                            type =
+                                NavType.StringType
+                        }
+                    )
             ) { backStackEntry ->
-                val id = backStackEntry.arguments?.getString("id")
-                PlaceholderScreen(title = "Detalle de Oferta\nID: $id")
+
+                val id =
+                    backStackEntry
+                        .arguments
+                        ?.getString("id")
+                        .orEmpty()
+
+                OfferDetailScreen(
+                    offerId =
+                        id,
+                    viewModel =
+                        offerDetailViewModel,
+                    onNavigateBack = {
+
+                        mainNavController
+                            .popBackStack()
+                    }
+                )
             }
         }
     }

@@ -39,6 +39,22 @@ object NetworkModule {
         return createRetrofit(client).create(MyOffersApiService::class.java)
     }
 
+    fun provideZoibeApiService(
+        sessionManager: SessionManager
+    ): ZoibeApiService {
+
+        val client =
+            createOkHttpClient(
+                sessionManager
+            )
+
+        return createRetrofit(
+            client
+        ).create(
+            ZoibeApiService::class.java
+        )
+    }
+
     private fun createOkHttpClient(sessionManager: SessionManager): OkHttpClient {
 
         // 1. Auth interceptor — añade Bearer token antes del logging
