@@ -13,14 +13,17 @@ import com.yeremi.ocupa2app.ui.offers.MapOffersViewModel
 import com.yeremi.ocupa2app.ui.profile.ChangePasswordViewModel
 import com.yeremi.ocupa2app.ui.profile.CompleteProfileScreen
 import com.yeremi.ocupa2app.ui.profile.CompleteProfileViewModel
+import com.yeremi.ocupa2app.ui.news.NewsViewModel
+import com.yeremi.ocupa2app.ui.publish.PublishOfferViewModel
+import com.yeremi.ocupa2app.ui.myoffers.MyOffersViewModel
 
 // Rutas del flujo de autenticación (sin navbar)
 sealed class Screen(val route: String) {
-    object Login           : Screen("login")
-    object Register        : Screen("register")
-    object ForgotPassword  : Screen("forgot_password")
+    object Login : Screen("login")
+    object Register : Screen("register")
+    object ForgotPassword : Screen("forgot_password")
     object CompleteProfile : Screen("complete_profile")
-    object Main            : Screen("main") // Entrada al flujo principal con navbar
+    object Main : Screen("main")
 }
 
 @Composable
@@ -31,7 +34,10 @@ fun NavGraph(
     profileViewModel: CompleteProfileViewModel,
     changePasswordViewModel: ChangePasswordViewModel,
     offersViewModel: ExploreOffersViewModel,
-    mapOffersViewModel: MapOffersViewModel
+    mapOffersViewModel: MapOffersViewModel,
+    newsViewModel: NewsViewModel,
+    publishViewModel: PublishOfferViewModel,
+    myOffersViewModel: MyOffersViewModel
 ) {
     NavHost(
         navController = navController,
@@ -44,16 +50,24 @@ fun NavGraph(
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = authViewModel,
-                onNavigateToRegister = { navController.navigate(Screen.Register.route) },
-                onNavigateToForgotPassword = { navController.navigate(Screen.ForgotPassword.route) },
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route)
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate(Screen.ForgotPassword.route)
+                },
                 onLoginSuccess = { profileCompleted ->
                     if (profileCompleted) {
                         navController.navigate(Screen.Main.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                            popUpTo(Screen.Login.route) {
+                                inclusive = true
+                            }
                         }
                     } else {
                         navController.navigate(Screen.CompleteProfile.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                            popUpTo(Screen.Login.route) {
+                                inclusive = true
+                            }
                         }
                     }
                 }
@@ -63,15 +77,21 @@ fun NavGraph(
         composable(Screen.Register.route) {
             RegisterScreen(
                 viewModel = authViewModel,
-                onNavigateToLogin = { navController.popBackStack() },
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                },
                 onRegisterSuccess = { profileCompleted ->
                     if (profileCompleted) {
                         navController.navigate(Screen.Main.route) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(0) {
+                                inclusive = true
+                            }
                         }
                     } else {
                         navController.navigate(Screen.CompleteProfile.route) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(0) {
+                                inclusive = true
+                            }
                         }
                     }
                 }
@@ -81,7 +101,9 @@ fun NavGraph(
         composable(Screen.ForgotPassword.route) {
             ForgotPasswordScreen(
                 viewModel = authViewModel,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -90,7 +112,9 @@ fun NavGraph(
                 viewModel = profileViewModel,
                 onNavigateToHome = {
                     navController.navigate(Screen.Main.route) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(0) {
+                            inclusive = true
+                        }
                     }
                 }
             )
@@ -106,9 +130,14 @@ fun NavGraph(
                 mapOffersViewModel = mapOffersViewModel,
                 changePasswordViewModel = changePasswordViewModel,
                 profileViewModel = profileViewModel,
+                newsViewModel = newsViewModel,
+                publishViewModel = publishViewModel,
+                myOffersViewModel = myOffersViewModel,
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(0) {
+                            inclusive = true
+                        }
                     }
                 }
             )

@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.yeremi.ocupa2app.ui.offers.ExploreOffersScreen
 import com.yeremi.ocupa2app.ui.offers.ExploreOffersViewModel
 import com.yeremi.ocupa2app.ui.offers.MapOffersScreen
@@ -20,17 +22,20 @@ import com.yeremi.ocupa2app.ui.profile.ChangePasswordScreen
 import com.yeremi.ocupa2app.ui.profile.ChangePasswordViewModel
 import com.yeremi.ocupa2app.ui.profile.CompleteProfileViewModel
 import com.yeremi.ocupa2app.ui.profile.ProfileScreen
+import com.yeremi.ocupa2app.ui.news.NewsViewModel
+import com.yeremi.ocupa2app.ui.publish.PublishOfferViewModel
+import com.yeremi.ocupa2app.ui.myoffers.MyOffersViewModel
 import com.yeremi.ocupa2app.ui.theme.AcidLime
 import com.yeremi.ocupa2app.ui.theme.ElectricTeal
 import com.yeremi.ocupa2app.ui.theme.SolarOrange
 
 // Rutas del flujo principal (con navbar)
 sealed class MainScreen(val route: String) {
-    object Home     : MainScreen("main_home")
-    object Explore  : MainScreen("main_explore")
-    object Map      : MainScreen("main_map")
-    object MyApps   : MainScreen("main_myapps")
-    object Profile  : MainScreen("main_profile")
+    object Home : MainScreen("main_home")
+    object Explore : MainScreen("main_explore")
+    object Map : MainScreen("main_map")
+    object MyApps : MainScreen("main_myapps")
+    object Profile : MainScreen("main_profile")
 }
 
 // Definición de los ítems de la barra
@@ -78,6 +83,9 @@ fun MainScaffold(
     mapOffersViewModel: MapOffersViewModel,
     changePasswordViewModel: ChangePasswordViewModel,
     profileViewModel: CompleteProfileViewModel,
+    newsViewModel: NewsViewModel,
+    publishViewModel: PublishOfferViewModel,
+    myOffersViewModel: MyOffersViewModel,
     onLogout: () -> Unit
 ) {
     val mainNavController = rememberNavController()
@@ -91,14 +99,39 @@ fun MainScaffold(
             )
         }
     ) { innerPadding ->
+
         NavHost(
             navController = mainNavController,
             startDestination = MainScreen.Home.route,
-            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+            modifier = Modifier.padding(
+                bottom = innerPadding.calculateBottomPadding()
+            )
         ) {
+
             composable(MainScreen.Home.route) {
-                // TODO: HomeScreen - pendiente implementación por otro compañero
-                PlaceholderScreen(title = "Inicio")
+                com.yeremi.ocupa2app.ui.home.HomeScreen(
+                    onNavigateToExplore = {
+                        mainNavController.navigate(MainScreen.Explore.route) {
+                            popUpTo(MainScreen.Home.route) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateToNews = {
+                        mainNavController.navigate("news")
+                    },
+                    onNavigateToPublish = {
+                        mainNavController.navigate("publish_offer")
+                    },
+                    onNavigateToMyOffers = {
+                        mainNavController.navigate("my_offers")
+                    },
+                    onNavigateToAbout = {
+                        mainNavController.navigate("about")
+                    }
+                )
             }
 
             composable(MainScreen.Explore.route) {
@@ -116,10 +149,14 @@ fun MainScaffold(
             composable(MainScreen.Map.route) {
                 MapOffersScreen(
                     viewModel = mapOffersViewModel,
-                    onNavigateBack = { mainNavController.popBackStack() },
+                    onNavigateBack = {
+                        mainNavController.popBackStack()
+                    },
                     onNavigateToList = {
                         mainNavController.navigate(MainScreen.Explore.route) {
-                            popUpTo(MainScreen.Home.route) { saveState = true }
+                            popUpTo(MainScreen.Home.route) {
+                                saveState = true
+                            }
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -148,7 +185,106 @@ fun MainScaffold(
             composable("change_password") {
                 ChangePasswordScreen(
                     viewModel = changePasswordViewModel,
-                    onNavigateBack = { mainNavController.popBackStack() }
+                    onNavigateBack = {
+                        mainNavController.popBackStack()
+                    }
+                )
+            }
+
+            composable("news") {
+                com.yeremi.ocupa2app.ui.news.NewsListScreen(
+                    viewModel = newsViewModel,
+                    onNavigateToDetail = { index ->
+                        mainNavController.navigate(
+                            "news_detail/$index"
+                        )
+                    },
+                    onNavigateBack = {
+                        mainNavController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                "news_detail/{newsIndex}",
+                arguments = listOf(
+                    navArgument("newsIndex") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+
+                val newsIndex =
+                    backStackEntry.arguments?.getInt("newsIndex") ?: 0
+
+                com.yeremi.ocupa2app.ui.news.NewsDetailScreen(
+                    newsIndex = newsIndex,
+                    viewModel = newsViewModel,
+                    onNavigateBack = {
+                        mainNavController.popBackStack()
+                    }
+                )
+            }
+
+            composable("publish_offer") {
+                com.yeremi.ocupa2app.ui.publish.PublishOfferScreen(
+                    viewModel = publishViewModel,
+                    onPublishSuccess = {
+                        mainNavController.navigate("my_offers") {
+                            popUpTo("publish_offer") {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    onNavigateBack = {
+                        mainNavController.popBackStack()
+                    }
+                )
+            }
+
+            composable("my_offers") {
+                com.yeremi.ocupa2app.ui.myoffers.MyOffersScreen(
+                    viewModel = myOffersViewModel,
+                    onNavigateToApplicants = { offerId ->
+                        mainNavController.navigate(
+                            "my_offer_applicants/$offerId"
+                        )
+                    },
+                    onNavigateToPublish = {
+                        mainNavController.navigate("publish_offer")
+                    },
+                    onNavigateBack = {
+                        mainNavController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                "my_offer_applicants/{offerId}",
+                arguments = listOf(
+                    navArgument("offerId") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+
+                val offerId =
+                    backStackEntry.arguments?.getString("offerId") ?: ""
+
+                com.yeremi.ocupa2app.ui.myoffers.MyOfferApplicantsScreen(
+                    offerId = offerId,
+                    viewModel = myOffersViewModel,
+                    onNavigateBack = {
+                        mainNavController.popBackStack()
+                    }
+                )
+            }
+
+            composable("about") {
+                com.yeremi.ocupa2app.ui.about.AboutScreen(
+                    onNavigateBack = {
+                        mainNavController.popBackStack()
+                    }
                 )
             }
 
