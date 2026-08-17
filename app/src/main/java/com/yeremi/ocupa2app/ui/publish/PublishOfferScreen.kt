@@ -629,24 +629,26 @@ private fun StepFoto(
     ) { uri: Uri? ->
 
         if (uri != null) {
-            val inputStream =
-                context.contentResolver.openInputStream(uri)
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                if (inputStream != null) {
+                    val file = File(
+                        context.filesDir,
+                        "offer_photo_${System.currentTimeMillis()}.jpg"
+                    )
 
-            val file = File(
-                context.cacheDir,
-                "offer_photo_${System.currentTimeMillis()}.jpg"
-            )
+                    FileOutputStream(file).use { output ->
+                        inputStream.copyTo(output)
+                    }
+                    inputStream.close()
 
-            FileOutputStream(file).use { output ->
-                inputStream?.copyTo(output)
+                    viewModel.setPhoto(file)
+
+                    previewBitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-
-            viewModel.setPhoto(file)
-
-            previewBitmap =
-                android.graphics.BitmapFactory.decodeFile(
-                    file.absolutePath
-                )
         }
     }
 

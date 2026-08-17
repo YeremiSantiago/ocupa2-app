@@ -11,6 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.yeremi.ocupa2app.data.local.SessionManager
 import com.yeremi.ocupa2app.data.repository.AuthRepository
@@ -45,11 +50,16 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        // Crear todas las dependencias de la aplicación
-        val dependencies = AppDependencies(applicationContext)
-
         setContent {
+            val context = LocalContext.current
+            var dependencies by remember { mutableStateOf(AppDependencies(context)) }
             val token by dependencies.sessionManager.tokenFlow.collectAsState(initial = "LOADING")
+
+            LaunchedEffect(token) {
+                if (token != "LOADING") {
+                    dependencies = AppDependencies(context)
+                }
+            }
 
             Ocupa2AppTheme {
                 if (token == "LOADING") {
