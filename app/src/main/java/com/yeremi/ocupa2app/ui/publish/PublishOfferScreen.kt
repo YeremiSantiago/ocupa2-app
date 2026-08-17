@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -447,11 +448,11 @@ private fun AdditionalQuestionsEditor(
     questions: List<PublishQuestion>,
     viewModel: PublishOfferViewModel
 ) {
-    var label by remember {
+    var label by rememberSaveable {
         mutableStateOf("")
     }
 
-    var type by remember {
+    var type by rememberSaveable {
         mutableStateOf("text")
     }
 
@@ -605,6 +606,16 @@ private fun StepFoto(
 ) {
     var previewBitmap by remember {
         mutableStateOf<android.graphics.Bitmap?>(null)
+    }
+
+    LaunchedEffect(uiState.photoFile) {
+        if (uiState.photoFile != null && previewBitmap == null) {
+            try {
+                previewBitmap = android.graphics.BitmapFactory.decodeFile(uiState.photoFile.absolutePath)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     val launcher = rememberLauncherForActivityResult(

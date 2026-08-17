@@ -27,130 +27,122 @@ fun MyOfferApplicantsScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
 
     LaunchedEffect(offerId) {
         viewModel.loadApplicants(offerId)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-
-        TopAppBar(
-            title = {
-                Text(
-                    "Aplicantes",
-                    fontFamily = RajdhaniFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = IceWhite
-                )
-            },
-            navigationIcon = {
-                IconButton(
-                    onClick = onNavigateBack
-                ) {
-                    Icon(
-                        Icons.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = IceWhite
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background
-            )
-        )
-
-        if (uiState.errorMessage != null) {
-            Text(
-                text = uiState.errorMessage ?: "",
-                color = SolarOrange,
-                fontFamily = WorkSansFamily,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(
-                    horizontal = 20.dp,
-                    vertical = 8.dp
-                )
-            )
-        }
-
-        val currentOffer = uiState.myOffers.firstOrNull { it.id == offerId }
-        if (currentOffer != null) {
-            OfferSummaryCard(currentOffer)
-        }
-
-        when {
-
-            uiState.isLoading && uiState.applicants.isEmpty() -> {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = AcidLime
-                    )
-                }
-            }
-
-            uiState.applicants.isEmpty() -> {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = {
                     Text(
-                        "Todavía nadie ha aplicado a esta oferta.",
-                        color = MutedGray,
-                        fontFamily = WorkSansFamily
+                        "Aplicantes",
+                        fontFamily = RajdhaniFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = IceWhite
                     )
-                }
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onNavigateBack
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = IceWhite
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            val currentOffer = uiState.myOffers.firstOrNull { it.id == offerId }
+            if (currentOffer != null) {
+                OfferSummaryCard(currentOffer)
             }
 
-            else -> {
-                LazyColumn(
-                    contentPadding = PaddingValues(
-                        horizontal = 20.dp,
-                        vertical = 12.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-
-                    items(uiState.applicants) { applicant ->
-
-                        ApplicantCard(
-                            applicant = applicant,
-                            isBusy = uiState.actionInProgressId == applicant.id,
-
-                            onRate = { rating ->
-                                viewModel.rateApplicant(
-                                    offerId,
-                                    applicant.id,
-                                    rating
-                                )
-                            },
-
-                            onDiscard = {
-                                viewModel.discardApplicant(
-                                    offerId,
-                                    applicant.id
-                                )
-                            },
-
-                            onMarkFinalist = {
-                                viewModel.markFinalist(
-                                    offerId,
-                                    applicant.id
-                                )
-                            },
-
-                            onChooseWinner = {
-                                viewModel.chooseWinner(
-                                    offerId,
-                                    applicant.id
-                                )
-                            }
+            when {
+                uiState.isLoading && uiState.applicants.isEmpty() -> {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = AcidLime
                         )
+                    }
+                }
+
+                uiState.applicants.isEmpty() -> {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Todavía nadie ha aplicado a esta oferta.",
+                            color = MutedGray,
+                            fontFamily = WorkSansFamily
+                        )
+                    }
+                }
+
+                else -> {
+                    LazyColumn(
+                        contentPadding = PaddingValues(
+                            horizontal = 20.dp,
+                            vertical = 12.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.applicants) { applicant ->
+                            ApplicantCard(
+                                applicant = applicant,
+                                isBusy = uiState.actionInProgressId == applicant.id,
+                                onRate = { rating ->
+                                    viewModel.rateApplicant(
+                                        offerId,
+                                        applicant.id,
+                                        rating
+                                    )
+                                },
+                                onDiscard = {
+                                    viewModel.discardApplicant(
+                                        offerId,
+                                        applicant.id
+                                    )
+                                },
+                                onMarkFinalist = {
+                                    viewModel.markFinalist(
+                                        offerId,
+                                        applicant.id
+                                    )
+                                },
+                                onChooseWinner = {
+                                    viewModel.chooseWinner(
+                                        offerId,
+                                        applicant.id
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -174,15 +166,12 @@ private fun ApplicantCard(
             .background(Graphite)
             .padding(16.dp)
     ) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-
                 Text(
                     text = applicant.applicantName ?: "Aplicante",
                     color = IceWhite,
@@ -190,16 +179,13 @@ private fun ApplicantCard(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp
                 )
-
                 Spacer(
                     modifier = Modifier.height(4.dp)
                 )
-
                 ApplicantStatusBadge(
                     applicant.status
                 )
             }
-
             if (isBusy) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
@@ -213,7 +199,6 @@ private fun ApplicantCard(
             Spacer(
                 modifier = Modifier.height(8.dp)
             )
-
             Text(
                 text = "\"${applicant.comment}\"",
                 color = MutedGray,
@@ -226,9 +211,7 @@ private fun ApplicantCard(
             Spacer(
                 modifier = Modifier.height(10.dp)
             )
-
             applicant.answers.forEach { answer ->
-
                 Text(
                     text = "• ${answer.value}",
                     color = IceWhite.copy(alpha = 0.8f),
@@ -242,22 +225,16 @@ private fun ApplicantCard(
             modifier = Modifier.height(12.dp)
         )
 
-        // Calificación con estrellas
         Row {
             for (i in 1..5) {
-
                 Icon(
-                    imageVector =
-                        if ((applicant.rating ?: 0) >= i) {
-                            Icons.Filled.Star
-                        } else {
-                            Icons.Filled.StarBorder
-                        },
-
+                    imageVector = if ((applicant.rating ?: 0) >= i) {
+                        Icons.Filled.Star
+                    } else {
+                        Icons.Filled.StarBorder
+                    },
                     contentDescription = "Calificar $i",
-
                     tint = SolarOrange,
-
                     modifier = Modifier
                         .size(24.dp)
                         .clickable(
@@ -269,20 +246,13 @@ private fun ApplicantCard(
             }
         }
 
-        // Botones de acción
-        if (
-            applicant.status != "discarded" &&
-            applicant.status != "winner"
-        ) {
-
+        if (applicant.status != "discarded" && applicant.status != "winner") {
             Spacer(
                 modifier = Modifier.height(12.dp)
             )
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 OutlinedButton(
                     onClick = onDiscard,
                     enabled = !isBusy,
@@ -297,7 +267,6 @@ private fun ApplicantCard(
                         fontSize = 12.sp
                     )
                 }
-
                 OutlinedButton(
                     onClick = onMarkFinalist,
                     enabled = !isBusy,
@@ -313,11 +282,9 @@ private fun ApplicantCard(
                     )
                 }
             }
-
             Spacer(
                 modifier = Modifier.height(8.dp)
             )
-
             Button(
                 onClick = onChooseWinner,
                 enabled = !isBusy,
@@ -343,20 +310,11 @@ private fun ApplicantStatusBadge(
     status: String
 ) {
     val (label, color) = when (status) {
-
-        "winner" ->
-            "Ganador" to AcidLime
-
-        "finalist" ->
-            "Finalista" to ElectricTeal
-
-        "discarded" ->
-            "Descartado" to SolarOrange
-
-        else ->
-            "En revisión" to MutedGray
+        "winner" -> "Ganador" to AcidLime
+        "finalist" -> "Finalista" to ElectricTeal
+        "discarded" -> "Descartado" to SolarOrange
+        else -> "En revisión" to MutedGray
     }
-
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
