@@ -57,6 +57,7 @@ class PublishOfferViewModel(private val repository: PublishOfferRepository) : Vi
     }
 
     fun selectJobType(jobType: JobTypeDetail) {
+        if (_uiState.value.selectedJobType?.key == jobType.key) return
         _uiState.value = _uiState.value.copy(selectedJobType = jobType, customAnswers = emptyMap())
     }
 
@@ -89,10 +90,16 @@ class PublishOfferViewModel(private val repository: PublishOfferRepository) : Vi
                 s.address.isNotBlank() &&
                 s.lat != null && s.lng != null &&
                 s.paymentAmount.toDoubleOrNull() != null &&
-                s.description.isNotBlank() &&
+                s.description.length >= 10 &&
                 s.deadline.isNotBlank()
+
         if (!isValid) {
-            _uiState.value = s.copy(errorMessage = "Completa todos los campos obligatorios y selecciona la ubicación")
+            val msg = if (s.description.isNotBlank() && s.description.length < 10) {
+                "La descripción es muy corta (mínimo 10 caracteres)"
+            } else {
+                "Completa todos los campos obligatorios y selecciona la ubicación"
+            }
+            _uiState.value = s.copy(errorMessage = msg)
         }
         return isValid
     }

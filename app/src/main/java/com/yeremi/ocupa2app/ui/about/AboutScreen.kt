@@ -8,7 +8,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -31,11 +33,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
+import com.yeremi.ocupa2app.R
 import com.yeremi.ocupa2app.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -45,7 +51,7 @@ data class TeamMember(
     val phone: String,            // formato con código de país, ej: "+18095551234"
     val telegramUsername: String, // sin @ y sin link, solo el usuario
     val accent: Color,
-    val photoUrl: String? = null  // null = usa iniciales como placeholder
+    val photoRes: Int? = null     // ID de recurso local (R.drawable.xxx)
 )
 
 private val teamMembers = listOf(
@@ -54,21 +60,24 @@ private val teamMembers = listOf(
         matricula = "2024-1872",
         phone = "+18097538841",
         telegramUsername = "diomarfleming",
-        accent = AcidLime
+        accent = AcidLime,
+        photoRes = R.drawable.team_diomar
     ),
     TeamMember(
         name = "Jeremy Santiago Hernández",
         matricula = "2024-1504",
         phone = "+18492014771",
         telegramUsername = "Yeremixs151",
-        accent = ElectricTeal
+        accent = ElectricTeal,
+        photoRes = R.drawable.team_jeremy
     ),
     TeamMember(
         name = "Zoibe Mesa González",
         matricula = "2024-1831",
         phone = "+18099103642",
         telegramUsername = "ZoibeMesa",
-        accent = SolarOrange
+        accent = SolarOrange,
+        photoRes = R.drawable.team_zoibe
     )
 )
 
@@ -123,37 +132,47 @@ private fun HeroHeader() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp)
+            .height(300.dp)
             .background(
-                Brush.linearGradient(
-                    colors = listOf(AcidLime.copy(alpha = 0.22f), ElectricTeal.copy(alpha = 0.12f), Graphite)
+                Brush.verticalGradient(
+                    colors = listOf(AcidLime.copy(alpha = 0.15f), MaterialTheme.colorScheme.background)
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(top = 20.dp)
+        ) {
+            // Imagen del equipo principal
+            Image(
+                painter = painterResource(R.drawable.team_group),
+                contentDescription = "Equipo Ocupa2",
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(AcidLime.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Groups, contentDescription = null, tint = AcidLime, modifier = Modifier.size(28.dp))
-            }
-            Spacer(modifier = Modifier.height(10.dp))
+                    .size(180.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .border(2.dp, AcidLime.copy(alpha = 0.5f), RoundedCornerShape(28.dp))
+                    .background(Graphite),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
                 text = "OCUPA2",
                 color = IceWhite,
                 fontFamily = RajdhaniFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
+                fontSize = 28.sp
             )
+
             Text(
                 text = "Hecho con dedicación por 3 estudiantes del ITLA",
                 color = MutedGray,
                 fontFamily = WorkSansFamily,
-                fontSize = 12.sp
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 40.dp)
             )
         }
     }
@@ -210,13 +229,22 @@ private fun TeamMemberCard(member: TeamMember) {
                     .background(member.accent.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = member.name.take(1).uppercase(),
-                    color = member.accent,
-                    fontFamily = RajdhaniFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp
-                )
+                if (member.photoRes != null) {
+                    Image(
+                        painter = painterResource(member.photoRes),
+                        contentDescription = member.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = member.name.take(1).uppercase(),
+                        color = member.accent,
+                        fontFamily = RajdhaniFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(14.dp))
