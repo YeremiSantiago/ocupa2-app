@@ -158,6 +158,15 @@ fun MainScaffold(
                     },
                     onNavigateToAbout = {
                         mainNavController.navigate("about")
+                    },
+                    onNavigateToProfile = {
+                        mainNavController.navigate(MainScreen.Profile.route) {
+                            popUpTo(MainScreen.Home.route) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }

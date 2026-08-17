@@ -50,9 +50,7 @@ interface ZoibeApiService {
     ): Response<AuthResponse<Experience>>
 
     // ─────────────────────────────────────────────
-    // VIDEOS
-    // Swagger confirmado:
-    // GET https://ocupa2.ia3x.com/apix/videos
+    // VIDEO
     // ─────────────────────────────────────────────
 
     @GET("videos")
