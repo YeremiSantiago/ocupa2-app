@@ -14,7 +14,7 @@ interface PublishApiService {
     suspend fun uploadImage(@Body request: UploadImageRequest): Response<AuthResponse<UploadImageResponse>>
 
     // Cobro de 1 USD — se hace ANTES de crear la oferta. Devuelve un paymentId.
-    @POST("com/yeremi/ocupa2app/ui/payments")
+    @POST("payments")
     suspend fun chargeCard(@Body request: ChargeCardRequest): Response<AuthResponse<Payment>>
 
     @GET("me/payments")

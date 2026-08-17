@@ -46,6 +46,9 @@ fun PublishOfferScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+        if (viewModel.uiState.value.step == PublishStep.EXITO) {
+            viewModel.reset()
+        }
         viewModel.loadJobTypes()
     }
 
