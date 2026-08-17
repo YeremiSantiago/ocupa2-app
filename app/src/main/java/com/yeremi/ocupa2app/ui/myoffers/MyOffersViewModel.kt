@@ -23,6 +23,10 @@ class MyOffersViewModel(private val repository: MyOffersRepository) : ViewModel(
     private val _uiState = MutableStateFlow(MyOffersUiState())
     val uiState: StateFlow<MyOffersUiState> = _uiState
 
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
     fun loadMyOffers() {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
@@ -64,8 +68,15 @@ class MyOffersViewModel(private val repository: MyOffersRepository) : ViewModel(
         repository.markFinalist(applicationId)
     }
 
-    fun chooseWinner(offerId: String, applicationId: String) = runAction(offerId, applicationId) {
-        repository.chooseWinner(applicationId)
+    fun chooseWinner(
+        offerId: String,
+        applicationId: String,
+        salary: Double? = null,
+        currency: String? = null,
+        startDate: String? = null,
+        duration: String? = null
+    ) = runAction(offerId, applicationId) {
+        repository.chooseWinner(applicationId, salary, currency, startDate, duration)
     }
 
     private fun runAction(offerId: String, applicationId: String, action: suspend () -> MyOffersResult<Unit>) {

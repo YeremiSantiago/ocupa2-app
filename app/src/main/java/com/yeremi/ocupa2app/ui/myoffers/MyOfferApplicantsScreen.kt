@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yeremi.ocupa2app.network.models.Applicant
@@ -29,9 +31,13 @@ fun MyOfferApplicantsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Dialog state
+    var winnerDialogApplicant by remember { mutableStateOf<Applicant?>(null) }
+
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
             snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
         }
     }
 
@@ -136,10 +142,7 @@ fun MyOfferApplicantsScreen(
                                     )
                                 },
                                 onChooseWinner = {
-                                    viewModel.chooseWinner(
-                                        offerId,
-                                        applicant.id
-                                    )
+                                    winnerDialogApplicant = applicant
                                 }
                             )
                         }
@@ -147,7 +150,122 @@ fun MyOfferApplicantsScreen(
                 }
             }
         }
+        
+        // Winner Selection Dialog
+        winnerDialogApplicant?.let { applicant ->
+            WinnerSelectionDialog(
+                applicantName = applicant.applicantName ?: "Aplicante",
+                onDismiss = { winnerDialogApplicant = null },
+                onConfirm = { salary, currency, startDate, duration ->
+                    viewModel.chooseWinner(
+                        offerId = offerId,
+                        applicationId = applicant.id,
+                        salary = salary,
+                        currency = currency,
+                        startDate = startDate,
+                        duration = duration
+                    )
+                    winnerDialogApplicant = null
+                }
+            )
+        }
     }
+}
+
+@Composable
+private fun WinnerSelectionDialog(
+    applicantName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (salary: Double?, currency: String?, startDate: String?, duration: String?) -> Unit
+) {
+    var salaryStr by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf("DOP") }
+    var startDate by remember { mutableStateOf("") }
+    var duration by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Elegir Ganador",
+                fontFamily = RajdhaniFamily,
+                fontWeight = FontWeight.Bold,
+                color = AcidLime
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Al seleccionar a $applicantName como ganador, puedes formalizar los detalles del contrato a continuación (Opcional).",
+                    fontFamily = WorkSansFamily,
+                    fontSize = 14.sp,
+                    color = IceWhite
+                )
+                
+                OutlinedTextField(
+                    value = salaryStr,
+                    onValueChange = { salaryStr = it },
+                    label = { Text("Salario acordado") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                OutlinedTextField(
+                    value = currency,
+                    onValueChange = { currency = it },
+                    label = { Text("Moneda (ej. DOP, USD)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                OutlinedTextField(
+                    value = startDate,
+                    onValueChange = { startDate = it },
+                    label = { Text("Fecha de inicio (YYYY-MM-DD)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                OutlinedTextField(
+                    value = duration,
+                    onValueChange = { duration = it },
+                    label = { Text("Duración (ej. 3 meses)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val salary = salaryStr.toDoubleOrNull()
+                    onConfirm(
+                        salary,
+                        if (currency.isBlank()) null else currency,
+                        if (startDate.isBlank()) null else startDate,
+                        if (duration.isBlank()) null else duration
+                    )
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AcidLime, contentColor = Obsidian)
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(contentColor = IceWhite)
+            ) {
+                Text("Cancelar")
+            }
+        },
+        containerColor = Graphite,
+        titleContentColor = AcidLime,
+        textContentColor = IceWhite
+    )
 }
 
 @Composable

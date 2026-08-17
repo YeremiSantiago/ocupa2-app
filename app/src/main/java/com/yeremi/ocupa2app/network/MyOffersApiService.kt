@@ -16,7 +16,7 @@ interface MyOffersApiService {
     suspend fun deactivateOffer(@Path("id") offerId: String): Response<AuthResponse<Unit>>
 
     // Una sola acción para calificar / descartar / finalista / ganador
-    @PATCH("com/yeremi/ocupa2app/ui/applications/{id}")
+    @PATCH("applications/{id}")
     suspend fun updateApplication(
         @Path("id") applicationId: String,
         @Body request: ApplicationActionRequest
