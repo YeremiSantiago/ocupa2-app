@@ -1,6 +1,7 @@
 package com.yeremi.ocupa2app.ui.publish
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -45,6 +46,19 @@ fun PublishOfferScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    val handleBack = {
+        when (uiState.step) {
+            PublishStep.DATOS -> onNavigateBack()
+            PublishStep.FOTO -> viewModel.goToStep(PublishStep.DATOS)
+            PublishStep.PAGO -> viewModel.goToStep(PublishStep.FOTO)
+            PublishStep.EXITO -> onPublishSuccess()
+        }
+    }
+
+    BackHandler(enabled = true) {
+        handleBack()
+    }
+
     LaunchedEffect(Unit) {
         if (viewModel.uiState.value.step == PublishStep.EXITO) {
             viewModel.reset()
@@ -68,7 +82,7 @@ fun PublishOfferScreen(
             },
             navigationIcon = {
                 IconButton(
-                    onClick = onNavigateBack
+                    onClick = handleBack
                 ) {
                     Icon(
                         Icons.Filled.ArrowBack,
@@ -900,6 +914,25 @@ private fun StepPago(
                 viewModel.payAndPublish()
             }
         )
+
+        Spacer(
+            Modifier.height(12.dp)
+        )
+
+        TextButton(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            onClick = {
+                viewModel.goToStep(
+                    PublishStep.FOTO
+                )
+            }
+        ) {
+            Text(
+                "Volver a la foto",
+                color = MutedGray,
+                fontFamily = WorkSansFamily
+            )
+        }
 
         Spacer(
             Modifier.height(32.dp)
