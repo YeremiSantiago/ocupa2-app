@@ -41,10 +41,8 @@ class OfferDetailViewModel(
         viewModelScope.launch {
 
             _uiState.value =
-                _uiState.value.copy(
-                    isLoading = true,
-                    error = null,
-                    message = null
+                OfferDetailUiState(
+                    isLoading = true
                 )
 
             repository

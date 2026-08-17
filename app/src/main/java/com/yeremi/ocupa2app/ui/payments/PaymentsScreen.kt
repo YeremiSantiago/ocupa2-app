@@ -28,6 +28,10 @@ fun PaymentsScreen(
 
     val state by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.loadPayments()
+    }
+
     Scaffold(
         topBar = {
 

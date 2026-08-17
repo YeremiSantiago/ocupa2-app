@@ -31,9 +31,15 @@ fun MyApplicationsScreen(
     val state by
     viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.loadApplications()
+    }
+
     Column(
         modifier =
-            Modifier.fillMaxSize()
+            Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
     ) {
 
         Row(

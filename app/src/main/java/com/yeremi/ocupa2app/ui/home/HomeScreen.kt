@@ -80,7 +80,8 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(top = 24.dp)
+            .statusBarsPadding()
+            .padding(top = 16.dp)
     ) {
         Text(
             text = "OCUPA2",
