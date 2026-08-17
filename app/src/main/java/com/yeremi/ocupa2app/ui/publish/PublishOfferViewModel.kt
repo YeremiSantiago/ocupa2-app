@@ -130,8 +130,8 @@ class PublishOfferViewModel(private val repository: PublishOfferRepository) : Vi
         val photo = s.photoFile
         val jobType = s.selectedJobType
 
-        if (photo == null || jobType == null) {
-            _uiState.value = s.copy(errorMessage = "Faltan datos de la oferta o la foto")
+        if (photo == null || jobType == null || !photo.exists()) {
+            _uiState.value = s.copy(errorMessage = "Faltan datos de la oferta o la foto no es válida")
             return
         }
         if (s.cardNumber.isBlank() || s.expMonth.isBlank() || s.expYear.isBlank() || s.cvv.isBlank() || s.cardholder.isBlank()) {
@@ -188,16 +188,21 @@ class PublishOfferViewModel(private val repository: PublishOfferRepository) : Vi
                                 questions = s.additionalQuestions
                             )
                             when (val createResult = repository.createOffer(createRequest)) {
-                                is PublishResult.Success -> _uiState.value = _uiState.value.copy(
-                                    isLoading = false,
-                                    loadingMessage = null,
-                                    step = PublishStep.EXITO
-                                )
-                                is PublishResult.Error -> _uiState.value = _uiState.value.copy(
-                                    isLoading = false,
-                                    loadingMessage = null,
-                                    errorMessage = "Pago aprobado, pero falló crear la oferta: ${createResult.message}"
-                                )
+                                is PublishResult.Error -> {
+                                    _uiState.value = _uiState.value.copy(
+                                        isLoading = false,
+                                        loadingMessage = null,
+                                        errorMessage = "Fallo al crear la oferta: ${createResult.message}"
+                                    )
+                                }
+                                is PublishResult.Success -> {
+                                    _uiState.value.photoFile?.delete()
+                                    _uiState.value = s.copy(
+                                        isLoading = false,
+                                        loadingMessage = null,
+                                        step = PublishStep.EXITO
+                                    )
+                                }
                             }
                         }
                     }
@@ -207,6 +212,7 @@ class PublishOfferViewModel(private val repository: PublishOfferRepository) : Vi
     }
 
     fun reset() {
+        _uiState.value.photoFile?.delete()
         _uiState.value = PublishUiState(jobTypes = _uiState.value.jobTypes)
     }
 }
